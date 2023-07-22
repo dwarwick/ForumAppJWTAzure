@@ -23,7 +23,7 @@ jobs:
     - name: Install .Net Tools
       run: dotnet tool install --global dotnet-ef
     - name: Update Database
-      run: dotnet ef database update -s ForumAppJWTAzure\Server --connection Data Source=forumappjwtazureserverdbserver.database.windows.net,1433;Initial Catalog=ForumAppJWTAzure.Server_db;User ID=bgmsd1;Password=NAvy__2011
+      run: dotnet ef database update -s ForumAppJWTAzure\Server --connection ${{ DBCONNECTIONSTRING }}
     - name: Build
       run: dotnet build "${{ env.WORKING_DIRECTORY }}" --configuration ${{ env.CONFIGURATION }} --no-restore    
     - name: Test

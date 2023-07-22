@@ -23,7 +23,7 @@ jobs:
     - name: Install .Net Tools
       run: dotnet tool install --global dotnet-ef
     - name: Update Database
-      run: dotnet-ef database update -s ForumAppJWTAzure\Server
+      run: dotnet-ef database update -s ForumAppJWTAzure\Server --no-build
     - name: Build
       run: dotnet build "${{ env.WORKING_DIRECTORY }}" --configuration ${{ env.CONFIGURATION }} --no-restore    
     - name: Test

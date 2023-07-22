@@ -30,16 +30,7 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: webapp
-        path: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
-  run-migrations:
-    runs-on: windows-latest
-    steps:
-    - name: Install EF Core
-      run: dotnet tool install --global dotnet-ef
-    - name: Restore all tools
-      run: dotnet tool restore
-    - name: Update the database
-      run: dotnet ef database update 
+        path: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}  
   deploy:
     runs-on: windows-latest
     needs: build

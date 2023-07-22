@@ -5,8 +5,7 @@
       "secretStore": "AzureAppSettings",
       "resourceId": "/subscriptions/[parameters('subscriptionId')]/resourcegroups/[parameters('resourceGroupName')]/providers/Microsoft.Sql/servers/forumappjwtazureserverdbserver/databases/ForumDBAzure",
       "type": "mssql.azure",
-      "connectionId": "ConnectionStrings:DefaultConnection",
-      "dynamicId": null
+      "connectionId": "ConnectionStrings:DefaultConnection"
     }
   }
 }

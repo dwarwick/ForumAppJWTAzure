@@ -143,8 +143,8 @@ namespace ForumAppJWT.API.Controllers
             }
             catch (Exception ex)
             {
-                this.logger.LogError(ex, $"Something Went Wrong in the {nameof(this.Login)}");
-                return this.Problem($"Something Went Wrong in the {nameof(this.Login)}", statusCode: 500);
+                this.logger.LogError(ex, $"Something Went Wrong in the {nameof(this.Login)}: {ex.Message}");
+                return this.Problem($"Something Went Wrong in the {nameof(this.Login)}: {ex.Message}", statusCode: 500);
             }
         }
 

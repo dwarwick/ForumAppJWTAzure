@@ -1,0 +1,182 @@
+﻿
+/***********************************************************/
+
+
+
+.show {
+    display: flex;
+    animation-name: show-animation;
+    animation-duration: 1s;
+}
+
+
+
+
+
+
+.main-container {
+    margin: 50px 20px;
+    text-align: center;
+}
+
+    .main-container > div {
+        margin-top: 50px;
+    }
+
+.modal-open-button {
+    cursor: pointer;
+    padding: 20px;
+    border-radius: 25px;
+    border: 0px;
+    color: white;
+    box-shadow: 10px 10px 10px 0px rgba(55 55 55 / 20%);
+    opacity: 0.8;
+}
+
+    .modal-open-button:hover {
+        opacity: 1;
+        transform: translate3D(0,-1px,0) scale(1.03);
+    }
+
+    .modal-open-button.modal-open-button-default {
+        background-color: black;
+    }
+
+    .modal-open-button.modal-open-button-scrollable {
+        background-color: green;
+    }
+
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 100;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.8);
+}
+
+    
+
+.modal-container {
+    /*display: none;*/
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    z-index: 101;
+    transform: translate(-50%, -50%);
+    width: 100%;
+    height: 100%;
+    justify-content: center;
+    text-align: center;
+    background: var(--bodyBackgroundColor);
+    border-radius: 20px;
+    box-shadow: 20px 15px 20px 0px rgb(255 255 255 / 20%);
+    border-right: 1px solid rgba(255,255,255,0.2);
+    border-bottom: 1px solid rgba(255,255,255,0.2);
+    /* Let's add the overflow-y property */
+    overflow-y: auto;
+}
+
+.modal-container-visible {
+    display: block;
+    animation-name: show-animation;
+    animation-duration: 1s;
+}
+
+.hide {
+    /*display: none;*/
+    animation-name: hide-animation;
+    animation-duration: 1s;
+}
+
+#modal-container-not-scrollable.modal-container {
+    color: red;
+}
+
+#modal-container-scrollable.modal-container {
+    color: var(--textColor);
+}
+
+.modal-container .modal-container-controls {
+    position: absolute;
+    right: 30px;
+    top: 0px;
+}
+
+    .modal-container .modal-container-controls .modal-container-close-button {        
+        color: var(--bs-purple);
+        padding: 0px;
+    }
+
+        .modal-container .modal-container-controls .modal-container-close-button:hover {
+            opacity: 1;            
+            cursor: pointer;
+            color:deepskyblue;
+        }
+
+#modal-container-not-scrollable.modal-container .modal-container-content,
+#modal-container-scrollable.modal-container .modal-container-content {
+    margin: 5px;
+    text-align: justify;
+}
+
+    #modal-container-scrollable.modal-container .modal-container-content .modal-container-content-no-scroll {
+        margin: 10px;
+    }
+
+    #modal-container-scrollable.modal-container .modal-container-content .modal-container-content-scroll {
+        position: absolute;
+        width: 95vw;
+        height: calc(100% - 150px);
+        overflow-y: auto;
+        margin: 10px 10px 10px 10px;
+        padding: 20px;
+    }
+
+        #modal-container-scrollable.modal-container .modal-container-content .modal-container-content-scroll::-webkit-scrollbar {
+            width: 10px;
+            background-color: var(--forum-edit);
+        }
+
+        #modal-container-scrollable.modal-container .modal-container-content .modal-container-content-scroll::-webkit-scrollbar-track {
+            box-shadow: inset 0 0 2px #333;
+            border-radius: 10px;
+        }
+
+        #modal-container-scrollable.modal-container .modal-container-content .modal-container-content-scroll::-webkit-scrollbar-thumb {
+            background: var(--bs-purple);
+            opacity: 0.6;
+            border-radius: 10px;
+        }
+
+            #modal-container-scrollable.modal-container .modal-container-content .modal-container-content-scroll::-webkit-scrollbar-thumb:hover {
+                background-color: deepskyblue;
+            }
+
+.modal-container-content-no-scroll-footer{
+    position:fixed;
+    bottom:3px;
+}
+
+@keyframes show-animation {
+    from {
+        opacity: 0
+    }
+
+    to {
+        opacity: 1
+    }
+}
+
+@keyframes hide-animation {
+    from {
+        opacity: 1
+    }
+
+    to {
+        opacity: 0
+    }
+}
+}

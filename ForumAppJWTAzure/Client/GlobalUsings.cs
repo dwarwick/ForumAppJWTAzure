@@ -4,6 +4,7 @@ global using Microsoft.AspNetCore.Components.Authorization;
 global using System.Security.Claims;
 global using System.Net.Http.Headers;
 global using Newtonsoft.Json;
+global using ForumAppJWTAzure.Client.Services;
 global using ForumAppJWTAzure.Client.Services.Base;
 global using ForumAppJWTAzure.Client.Services.Authentication;
 global using ForumAppJWTAzure.Shared.ViewModels;

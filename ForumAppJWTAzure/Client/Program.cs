@@ -1,4 +1,5 @@
 using ForumAppJWTAzure.Client;
+using ForumAppJWTAzure.Client.Services;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using MudBlazor;
@@ -13,7 +14,15 @@ builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddScoped<ApiAuthenticationStateProvider>();
 builder.Services.AddScoped<AuthenticationStateProvider>(p => p.GetRequiredService<ApiAuthenticationStateProvider>());
 builder.Services.AddAuthorizationCore();
+
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
+builder.Services.AddSingleton<ISignalRService, SignalRService>();
+builder.Services.AddScoped<IForumService, ForumService>();
+builder.Services.AddScoped<IPostService, PostService>();
+builder.Services.AddScoped<ITagService, TagService>();
+builder.Services.AddScoped<IVoteService, VoteService>();
+builder.Services.AddScoped<ISearchService, SearchService>();
+builder.Services.AddScoped<StorageService>();
 
 builder.Services.AddMudServices(config =>
 {

@@ -7,16 +7,28 @@
 @using Microsoft.AspNetCore.Components.WebAssembly.Http
 @using Microsoft.JSInterop
 @using ForumAppJWTAzure.Client
+@using ForumAppJWTAzure.Client.Services
 @using ForumAppJWTAzure.Client.Services.Authentication
-@using ForumAppJWTAzure.Client.Shared
 @using ForumAppJWTAzure.Client.Pages.Shared
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Components.Authorization
 @using MudBlazor
+@using Microsoft.AspNetCore.SignalR.Client;
 
-@inject IJSRuntime _jsRuntime
-@inject NavigationManager _navManager
-@inject ILocalStorageService _localStorage
-@inject ISnackbar _snackbar
+@inject IConfiguration _configuration
 @inject IAuthenticationService _authService
+@inject NavigationManager _navManager
+@inject IJSRuntime _jsRuntime
+@inject HttpClient _client
+@inject ILocalStorageService _localStorage
+
+@inject IForumService _forumService
+@inject IPostService _postService
+@inject ITagService _tagService
+@inject IVoteService _voteService
+@inject StorageService _storageService
+@inject ISnackbar _snackbar
+
+@inject ISignalRService _signalRService
+@inject ISearchService _searchService
 

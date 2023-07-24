@@ -1,17 +1,4 @@
-﻿
-
-
-
-
-
-
-
-
-
-
-
-
-namespace ForumAppJWTAzure.Server.Controllers
+﻿namespace ForumAppJWTAzure.Server.Controllers
 {
     [Route("api/[controller]")]
     public class AuthController : ControllerBase

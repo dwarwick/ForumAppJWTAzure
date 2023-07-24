@@ -1,0 +1,65 @@
+﻿<AuthorizeView>
+    <Authorized>
+        <MudLink Href="/profile">
+            @(applicationUserViewModel?.DisplayName ?? "User Profile")
+            @if (profilePic == null)
+            {
+                <MudIcon Icon="@Icons.Material.Filled.Person" Class="ms-1 me-3" />
+            }
+            else
+            {
+                <MudImage Fluid="true" Src="@profilePic" Height="25" Width="25" Class="ms-1 me-3" />
+            }
+        </MudLink>
+
+
+        <MudLink Href="users/logout">Log Out<MudIcon Icon="@Icons.Material.Filled.Logout" Class="ms-1 me-3" /></MudLink>
+    </Authorized>
+    <NotAuthorized>
+        <MudLink Href="users/register">Register<MudIcon Icon="@Icons.Material.Filled.AppRegistration" Class="ms-1 me-3" /></MudLink>
+        <MudLink Href="users/login">Login<MudIcon Icon="@Icons.Material.Filled.Login" Class="ms-1 me-3" /></MudLink>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    ApplicationUserViewModel? applicationUserViewModel;
+
+    string? profilePic;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _authService.UpdatedUser += (s, e) =>  UpdatedUser(s,e);
+        _authService.UserLoggedOut += (s, e) => UserLoggedOut(s, e);
+
+        if (await _authService.IsIauthenticated() && applicationUserViewModel == null)
+        {
+            Response<ApplicationUserViewModel>? response = await _authService.GetLoggedInUser();
+
+            if (response?.Success ?? false) applicationUserViewModel = response.Data;
+        }
+
+        if (applicationUserViewModel != null)
+        {
+
+            profilePic = applicationUserViewModel.ProfilePicture;
+
+            StateHasChanged();
+        }
+    }
+
+    private void UpdatedUser(object? sender, ApplicationUserViewModel? viewModel)
+    {
+
+        applicationUserViewModel = viewModel;        
+        profilePic = applicationUserViewModel?.ProfilePicture;
+        StateHasChanged();
+    }
+
+    private void UserLoggedOut(object? sender, bool value)
+    {
+        applicationUserViewModel = null;
+        profilePic = null;
+
+        StateHasChanged();
+    }
+}

@@ -1,0 +1,36 @@
+﻿@page "/users/login"
+<MudCard>
+    <MudCardHeader><h3>Login</h3></MudCardHeader>
+    <MudCardContent>
+        <EditForm Model="LoginModel" OnValidSubmit="HandleLogin">
+            <DataAnnotationsValidator />
+            <MudTextField @bind-Value="LoginModel.Email" For="@(() => LoginModel.Email)" Immediate="true" Label="Email Address" />
+            <MudTextField @bind-Value="LoginModel.Password" For="@(() => LoginModel.Password)" Immediate="true" Label="Password" InputType="InputType.Password" />
+            <MudCardActions>
+                <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Outlined" Class="mt-3">Login</MudButton>
+                </MudCardActions>
+        </EditForm>
+    </MudCardContent>
+</MudCard>
+
+@code {
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public string? returnUrl { get; set; }
+    LoginUserDto LoginModel = new LoginUserDto();
+
+    public async Task HandleLogin(EditContext context)
+    {
+        var response = await _authService.AuthenticateAsync(LoginModel);
+
+        if (response.Success)
+        {
+            if (string.IsNullOrEmpty(returnUrl)) _navManager.NavigateTo("/");
+            else _navManager.NavigateTo(returnUrl);
+        }
+        else
+        {
+            _snackbar.Add("Invalid email address or password", Severity.Error);
+        }
+    }
+}

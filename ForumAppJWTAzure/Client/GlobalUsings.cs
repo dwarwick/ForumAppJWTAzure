@@ -11,3 +11,5 @@ global using Blazored.LocalStorage;
 global using ForumAppJWTAzure.Shared.Models.User;
 global using System.Text;
 global using ForumAppJWTAzure.Shared.Helpers;
+global using MudBlazor;
+global using MudBlazor.Services;

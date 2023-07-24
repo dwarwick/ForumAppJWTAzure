@@ -1,0 +1,164 @@
+﻿@inherits LayoutComponentBase
+
+@if(_theme == "dark")
+{
+    
+        @*<link id="theme" href="css/app-dark.css" rel="stylesheet" />*@
+}
+
+<MudThemeProvider IsDarkMode="@_isDarkMode" Theme="mudTheme" />
+<MudDialogProvider />
+<MudSnackbarProvider />
+<MudBreakpointProvider>
+
+    <PageTitle>ForumAppJWT.Client</PageTitle>
+    <MudLayout>
+
+        <MudAppBar Elevation="1">
+            <MudHidden Breakpoint="Breakpoint.MdAndUp">
+                <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@ToggleDrawer" />
+                <MudSpacer />
+                <LoginMenu />
+            </MudHidden>
+            <MudHidden Breakpoint="Breakpoint.SmAndDown">
+                <HeaderMenu ThemeChanged="ThemeChanged" />
+            </MudHidden>
+        </MudAppBar>      
+
+
+        <MudDrawer @bind-Open="@open" ClipMode="DrawerClipMode.Always" Elevation="1">
+            <MudPaper Class="d-flex flex-column flex-grow-1">
+                <div class="d-flex flex-column flex-grow-1 align-items-start">
+                    <AuthorizeView>
+                        <Authorized>
+                            <MudLink Href="/" Class="ms-3">Home<MudIcon Icon="@Icons.Material.Filled.Home" Class="ms-1 me-3" /></MudLink>
+                            <MudLink Href="forum" Class="ms-3">New Forum<MudIcon Icon="@Icons.Material.Filled.Forum" Class="ms-1 me-3" /></MudLink>
+                            <MudLink Href="forumlist" Class="ms-3">Forum List<MudIcon Icon="@Icons.Material.Filled.ViewList" Class="ms-1 me-3" /></MudLink>
+                        </Authorized>
+
+                        <NotAuthorized>
+                            <MudLink Href="/" Class="ms-3">Home<MudIcon Icon="@Icons.Material.Filled.Home" Class="ms-1 me-3" /></MudLink>
+                            <MudLink Href="forum" Class="ms-3" Color="Color.Error">New Forum<MudIcon Icon="@Icons.Material.Filled.Forum" Class="ms-1 me-3" /></MudLink>
+                            <MudLink Href="forumlist" Class="ms-3">Forum List<MudIcon Icon="@Icons.Material.Filled.ViewList" Class="ms-1 me-3" /></MudLink>
+                        </NotAuthorized>
+                    </AuthorizeView>
+                    <div class="ms-auto d-flex align-items-center">
+                        @*<MudSwitch Checked="@_darkTheme" Label="Dark Theme" CheckedChanged="@(e => UpdateTheme(e))" T="bool" />*@                        
+                    </div>
+                </div>
+            </MudPaper>
+        </MudDrawer>
+
+        <MudMainContent>
+            <MudContainer>
+                @Body
+            </MudContainer>
+        </MudMainContent>
+    </MudLayout>
+</MudBreakpointProvider>
+
+
+
+@code {
+    private IJSObjectReference? module;
+    string? _theme = null;
+    ApplicationUserViewModel? applicationUserViewModel;
+
+    private MudTheme mudTheme = new();
+
+    private bool _isDarkMode;
+    bool open = false;
+
+    MudTheme MyCustomLightTheme = new MudTheme()
+        {
+            Palette = new PaletteLight()
+            {                
+                AppbarBackground = Colors.Grey.Lighten3,
+            }
+        };
+
+    protected override async Task OnInitializedAsync()
+    {
+        module = await _jsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/app.js");
+
+        try
+        {
+            await CheckLoggedInUser();
+
+            _theme = await _localStorage.GetItemAsStringAsync("theme");
+            if (string.IsNullOrEmpty(_theme))
+            {
+                if (applicationUserViewModel != null)
+                {
+                    _theme = applicationUserViewModel?.Theme ?? "light"; //  "dark" : "light";
+                }
+                else
+                {
+                    _theme = "light";
+                }
+            }
+            await SetTheme();
+        }
+        catch (Exception)
+        {
+
+
+        }
+    }
+
+    private async Task CheckLoggedInUser()
+    {
+        if (await _authService.IsIauthenticated() && applicationUserViewModel == null)
+        {
+            Response<ApplicationUserViewModel>? response = await _authService.GetLoggedInUser();
+
+            if (response?.Success ?? false) applicationUserViewModel = response.Data;
+        }
+    }
+
+    private async Task SetTheme()
+    {        
+        await _localStorage.SetItemAsStringAsync("theme", _theme);
+        await _localStorage.SetItemAsync<DateTime>("LastCheckTime", DateTime.UtcNow);
+
+        if (_theme == "light") mudTheme = MyCustomLightTheme;
+
+        _isDarkMode = _theme == "dark";
+
+        if (module != null) 
+        {
+            if(_isDarkMode)
+            {
+                await module.InvokeAsync<string>("removeThemes");
+            }
+            else
+            {
+                await module.InvokeAsync<string>("removeThemes");
+            }
+
+            await module.InvokeAsync<string>("addCss", $"css/app-{_theme}.css");
+        }
+    }
+
+    void ToggleDrawer()
+    {
+        open = !open;
+    }
+
+    private async Task ThemeChanged()
+    {
+        _theme = _theme == "light" ? "dark" : "light";
+        
+        await SetTheme();
+        await CheckLoggedInUser();
+
+        StateHasChanged();
+
+        if(applicationUserViewModel != null)
+        {
+            applicationUserViewModel.Theme = _theme;
+
+            await _authService.UpdateUserAsync(applicationUserViewModel);
+        }
+    }
+}

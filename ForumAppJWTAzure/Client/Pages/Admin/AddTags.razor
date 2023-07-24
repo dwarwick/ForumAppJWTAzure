@@ -1,0 +1,102 @@
+﻿@page "/admin/createtag"
+@if (pageLoaded && applicationUserViewModel != null && tag != null && allTags != null)
+{
+    <MudCard Elevation="5">
+        <MudCardHeader Class="py-0">
+            <MudCardContent Class="pt-0"><MudText Typo="Typo.h3">Add Tags</MudText></MudCardContent>
+        </MudCardHeader>
+        <EditForm Model="@tag" OnValidSubmit="CreateTag">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+            <MudCardContent Class="py-0">
+
+                <MudTextField InputType="InputType.Text" Label="Tag Name" @bind-Value="tag.Name" For="@(() => tag.Name)" Mask="@(new RegexMask("^[A-Za-z0-9-]+$"))" />
+
+                <MudCardActions>
+                    <MudButton ButtonType="ButtonType.Submit">Save</MudButton>
+                </MudCardActions>
+
+            </MudCardContent>
+        </EditForm>       
+    </MudCard>
+
+    <MudTable @ref="_table" Items="@allTags" Hover="true" SortLabel="Sort By" Elevation="5" Class="mt-10">
+        <HeaderContent>
+            <MudTh><MudTableSortLabel SortBy="new Func<TagViewModel, object>(x=>x.Name!)">Tag Name</MudTableSortLabel></MudTh>            
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Tag">@context.Name</MudTd>            
+        </RowTemplate>
+        <PagerContent>
+            <MudPagination SelectedChanged="PageChanged" Count="@((_table.GetFilteredItemsCount() + _table.RowsPerPage - 1) / _table.RowsPerPage)" Class="pa-4" ShowFirstButton="true" ShowLastButton="true" ShowNextButton="true" ShowPreviousButton="true" />
+            <MudTablePager PageSizeOptions="Lookups.MudPagination.PageSizeOptions" InfoFormat="@($"{Lookups.MudPagination.InfoFormat}")" HorizontalAlignment="HorizontalAlignment.Right" HidePagination="true" />
+        </PagerContent>
+    </MudTable>
+}
+
+
+@code {
+    TagViewModel tag = new();
+    ApplicationUserViewModel? applicationUserViewModel;   
+    private MudTable<TagViewModel> _table = new();
+    List<TagViewModel>? allTags;
+    RegexMask regexMask = new("[A-Za-z0-9-,\\s]");
+
+    bool pageLoaded;
+
+    protected override async Task OnInitializedAsync()
+    {
+        pageLoaded = false;
+
+        Response<ApplicationUserViewModel> userResponse = await _authService.GetLoggedInUser();
+
+        if (userResponse.Success)
+        {
+            applicationUserViewModel = userResponse.Data;
+        }
+
+        Response<List<TagViewModel>> tagResponse = await _tagService.Get<TagViewModel>(ApiEndpoints.GetAllTags);
+
+        if (tagResponse.Success)
+        {
+            allTags = tagResponse.Data;            
+        }
+
+        pageLoaded = true;
+    }
+
+    private async Task CreateTag()
+    {
+        if (allTags != null &&  allTags.Any(x => (x.Name ?? "").Equals(tag.Name, StringComparison.OrdinalIgnoreCase)))
+        {
+            _snackbar.Add($"A Tag named {tag.Name} already exists. Tag not added", Severity.Error);
+            return;
+        }
+
+        DateTime createdDate = DateTime.UtcNow;
+        tag.CreatedById = applicationUserViewModel?.Id;
+        tag.CreatedDate = createdDate;
+        tag.ModifiedDate = createdDate;
+
+        Response<TagViewModel> response = await _tagService.Create<TagViewModel>(tag, ApiEndpoints.CreateNewTag);
+
+        if (response.Success)
+        {
+            _snackbar.Add($"{tag.Name} tag added", Severity.Success);
+            
+            if(allTags != null) allTags.Add(tag);
+
+            tag = new();
+            StateHasChanged();
+        }
+        else
+        {
+            _snackbar.Add($"Unable to add {tag.Name}", Severity.Error);
+        }
+    }
+
+    private void PageChanged(int i)
+    {
+        _table.NavigateTo(i - 1);
+    }
+}

@@ -1,0 +1,73 @@
+﻿<Spinner IsLoading="IsLoading">
+    @if (forums == null || forums.Count == 0)
+    {
+        <MudText Typo="Typo.h3">No forums available</MudText>
+    }
+    else
+    {
+        <MudTable @ref="_table" Items="@forums" RowsPerPage="5" Hover="true" LoadingProgressColor="Color.Info" Breakpoint="Breakpoint.None">
+            <HeaderContent>
+                <MudTh></MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd><ForumListItem forum="@context" /></MudTd>
+            </RowTemplate>
+            <PagerContent>
+                @if(_table != null)
+                {
+                    <MudPagination SelectedChanged="PageChanged" Count="@((_table.GetFilteredItemsCount() + _table.RowsPerPage - 1) / _table.RowsPerPage)" Class="pa-4" ShowFirstButton="true" ShowLastButton="true" ShowNextButton="true" ShowPreviousButton="true" />
+                    <MudTablePager PageSizeOptions="Lookups.MudPagination.PageSizeOptions" InfoFormat="@($"{Lookups.MudPagination.InfoFormat}")" HorizontalAlignment="HorizontalAlignment.Right" HidePagination="true" />
+                }                
+            </PagerContent>
+        </MudTable>
+    }
+</Spinner>
+
+@code {
+    [CascadingParameter] protected Task<AuthenticationState>? AuthStat { get; set; }
+
+    ApplicationUserViewModel? applicationUserViewModel;
+    private MudTable<ForumViewModel>? _table;
+    public List<ForumViewModel>? forums { get; set; }
+
+    [Parameter] public List<ForumViewModel>? searchForums { get; set; }
+
+    private bool IsLoading;
+
+    protected override async Task OnInitializedAsync()
+    {
+        IsLoading = true;
+        if (searchForums != null)
+        {
+            forums = new();
+            forums.AddRange(searchForums);
+        }
+        else
+        {
+            var response = await _forumService.GetAllForums();
+
+            if (response.Success) forums = response.Data;
+        }
+
+        ClaimsPrincipal? user = null;
+        if (AuthStat != null) user = (await AuthStat).User;
+
+        if (user?.Identity?.IsAuthenticated ?? false)
+        {
+            var userResponse = await _authService.GetLoggedInUser();
+
+            if (userResponse.Success)
+            {
+                applicationUserViewModel = userResponse.Data;
+            }
+        }
+        IsLoading = false;
+    }
+    private void PageChanged(int i)
+    {
+        if(_table != null)
+        {
+            _table.NavigateTo(i - 1);
+        }        
+    }
+}

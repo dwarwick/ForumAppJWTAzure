@@ -1,0 +1,28 @@
+﻿<div class="d-flex align-items-end">
+    <MudStack Row="true" AlignItems="AlignItems.End">
+        @if (ProfilePicture != null)
+        {
+            <MudAvatar Size="Size.Large"><MudImage Src="@path" /></MudAvatar>
+        }
+        else
+        {
+            <MudAvatar Size="Size.Large"><MudIcon Icon="@Icons.Material.Filled.Person" Size="Size.Large" /></MudAvatar>            
+        }
+
+        <div>@displayName</div>
+        
+    </MudStack>
+</div>
+
+@code {
+
+    [Parameter] public string? displayName { get; set; }
+    [Parameter] public string? ProfilePicture { get; set; }
+
+    string? path = "";    
+
+    protected override void OnInitialized()
+    {
+        path = ProfilePicture;        
+    }
+}

@@ -1,0 +1,95 @@
+﻿@page "/imageCropper"
+
+<div class="form-group">
+    <div class="custom-file">
+        <input id="upload" accept="image/*" type="file" class="custom-file-input" style="display:none;" @onchange="Upload">
+    </div>
+</div>
+
+<div class="upload-demo">
+    <div class="upload-demo-wrap">
+        <div id="upload-demo"></div>
+    </div>
+</div>
+
+@if (ShowCropButton)
+{
+    <MudIconButton OnClick="Up" Icon="@Icons.Material.Outlined.Save" />
+}
+
+<div id="result"></div>
+<img id="result-img" src=""/>
+
+
+@code {
+    ApplicationUserViewModel? applicationUserViewModel { get; set; }
+    [Parameter] public EventCallback<bool> updatedImage { get; set; }
+
+    private bool ShowCropButton;
+    string model { get; set; } = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (await _authService.IsIauthenticated() && applicationUserViewModel == null)
+        {
+            Response<ApplicationUserViewModel>? response = await _authService.GetLoggedInUser();
+
+            if (response?.Success ?? false) applicationUserViewModel = response.Data;
+        }
+    }
+
+    async Task Upload()
+    {
+        await _jsRuntime.InvokeVoidAsync("Crop.image", DotNetObjectReference.Create(this));
+        ShowCropButton = true;
+    }
+
+    async Task Up()
+    {
+        await _jsRuntime.InvokeVoidAsync("Crop.responses", DotNetObjectReference.Create(this));
+        ShowCropButton = false;
+    }
+
+    [JSInvokable]
+    public async void ResponseMethod(string data)
+    {
+        model = data;
+        await UploadServer(data);
+        StateHasChanged();
+    }
+
+    async Task UploadServer(string data)
+    {
+        if (applicationUserViewModel != null)
+        {
+            string filename = "";
+            StorageViewModel storageModel = new()
+            {
+                Base64 = data,
+                ContainerName = _configuration["BlobStorage:profile-pic-container"]!,
+                Guid = Guid.NewGuid().ToString()
+            };
+
+            //string filename = await _storageService.UploadAsync(data, applicationUserViewModel.Id!, _configuration["BlobStorage:profile-pic-container"]!);
+
+            var response = await _storageService.UploadAsync3(storageModel);
+
+            if(response.Success)
+            {
+                filename = response?.Data?.Uri ?? "";
+                _snackbar.Add("Successfully uploaded profile picture", Severity.Success);
+            }
+            else
+            {
+                _snackbar.Add("Problem uploading profile picture", Severity.Error);
+            }
+
+            if (!string.IsNullOrEmpty(filename))
+            {
+                applicationUserViewModel.ProfilePicture = filename;
+                await _authService.UpdateUserAsync(applicationUserViewModel);
+                await updatedImage.InvokeAsync(true);
+            }
+        }
+    }
+}

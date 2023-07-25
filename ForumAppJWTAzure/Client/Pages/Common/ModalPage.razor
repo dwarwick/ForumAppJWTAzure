@@ -1,0 +1,90 @@
+﻿@*<div class="blazor-modal @cssClass" id="blazor-modal">
+    <div class="blazor-modal-content">
+        @*<div class="flex flex-column">*
+            <div class="blazor-modal-header ">
+                <h5 class="blazor-modal-title">@Title</h5>
+                <span class="blazor-modal-close-button" @onclick="CloseModal">X</span>
+            </div>
+            <div class="blazor-modal-body ">
+                @if (ModalBody != null)
+                {
+                    @ModalBody
+                }
+            </div>
+            <div class="blazor-modal-footer mt-auto">
+                @if (ModalFooter != null)
+                {
+                    @ModalFooter
+                }
+            </div>
+        @*</div>
+    </div>
+</div>*@
+
+
+<div class="modal-overlay" id="modal-overlay"></div>
+
+<div class="modal-container @cssClass" id="modal-container-scrollable">
+    <div class="modal-container-controls">
+        <h1 class="modal-container-close-button" @onclick="CloseModal">X</h1>
+    </div>
+    <div class="modal-container-content">
+        <div class="modal-container-content-no-scroll">
+            <h5 class="blazor-modal-title">@Title</h5>
+        </div>
+        <div class="modal-container-content-scroll">
+            @if (ModalBody != null)
+            {
+                @ModalBody
+            }
+        </div>
+        <div class="modal-container-content-no-scroll-footer">
+            <h5>footer</h5>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public string Title { get; set; } = "";
+
+    [Parameter] public RenderFragment? ModalBody { get; set; }
+
+    [Parameter] public RenderFragment? ModalFooter { get; set; }
+
+    [Parameter] public bool IsOpened { get; set; }
+
+    [Parameter] public EventCallback<bool> ModalClosing { get; set; }
+
+    private IJSObjectReference? module;
+    private DotNetObjectReference<ModalPage>? objRef;
+
+    string cssClass => IsOpened ? "modal-container-visible" : "hide";
+
+    protected override void OnInitialized()
+    {
+        objRef = DotNetObjectReference.Create(this);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            module = await _jsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/app.js");
+        }
+    }
+
+    private async Task CloseModal()
+    {
+        IsOpened = false;
+        StateHasChanged();
+
+        if (module != null) await module.InvokeAsync<string>("waitforannimation", objRef);
+        else await ModalClosing.InvokeAsync(true);
+    }
+
+    [JSInvokable]
+    public async Task ModalClosedAsync()
+    {
+        await ModalClosing.InvokeAsync(true);
+    }
+}

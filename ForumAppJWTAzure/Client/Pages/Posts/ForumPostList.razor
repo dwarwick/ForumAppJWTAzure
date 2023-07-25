@@ -1,0 +1,190 @@
+﻿<ErrorList errors="@errors" />
+@if (!CreatingPost)
+{
+    <Editor ScriptSrc="lib/tinymce/tinymce.min.js" JsConfSrc="editorConf" Disable="true" @bind-Value="@postText" />
+}
+else
+{
+    <Editor ScriptSrc="lib/tinymce/tinymce.min.js" JsConfSrc="tinyMceConf" Disable="false" @bind-Value="@postText" />
+}
+
+
+<AuthorizeView>
+    <Authorized>
+        @if (!CreatingPost)
+        {
+            <i class="bi bi-pencil" @onclick="CreatePostOnClick" style="cursor:pointer">New Post</i>
+        }
+        else
+        {
+            <div class="d-flex">
+                <button class="bi bi-arrow-return-left" type="button" style="background-color:transparent;border:none;" @onclick="SubmitOnClick"> Submit</button>
+                <button class="bi bi-door-open" type="reset" style="background-color:transparent;border:none;" @onclick="@CancelOnClick"> Cancel</button>
+            </div>
+        }
+    </Authorized>
+
+</AuthorizeView>
+
+@if (forum!.Posts == null || forum!.Posts.Count == 0)
+{
+    <p>No posts available</p>
+}
+else
+{
+    <MudPaper Elevation="5">
+        <MudFab id="ScrollToBottom_button" Class="showing" StartIcon="@Icons.Material.Filled.ArrowCircleDown" Color="Color.Tertiary" @onclick="ScrollToBottom" />
+        <MudTable @ref="_table" id="PostList" Items="@forum.Posts" RowsPerPage="@RowsPerPage" RowsPerPageChanged="RowsPerPageChanged" Hover="true" Breakpoint="Breakpoint.None" LoadingProgressColor="Color.Info" Style="max-height: calc(100vh - 200px);overflow-y:auto;">
+            <HeaderContent>
+                <MudTh></MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd><ForumPost ForumCreatedById="@forum!.CreatedById" @bind-post="@context" @bind-post:after="postChanged" OnReplying="@(e => ReplyToPost(e))" PostIndex="@(GetPostNumber(context.Id))" PostIndexFunc="GetPostNumber" /></MudTd>
+            </RowTemplate>
+            <PagerContent>
+                @if (_table != null)
+                {
+                    <MudPagination SelectedChanged="PageChanged" Count="@((_table.GetFilteredItemsCount() + _table.RowsPerPage - 1) / _table.RowsPerPage)" Class="pa-4" ShowFirstButton="true" ShowLastButton="true" ShowNextButton="true" ShowPreviousButton="true" />
+                    <MudTablePager PageSizeOptions="Lookups.MudPagination.PageSizeOptions" InfoFormat="@($"{Lookups.MudPagination.InfoFormat}")" HorizontalAlignment="HorizontalAlignment.Right" HidePagination="true" />
+                }
+            </PagerContent>
+        </MudTable>
+        <MudScrollToTop TopOffset="100"  Selector="#PostList" Style="z-index:2001;right:50px;bottom:70px;" >
+            <MudFab Color="Color.Tertiary" StartIcon="@Icons.Material.Filled.ArrowCircleUp" />
+        </MudScrollToTop>
+    </MudPaper>
+}
+
+@code {
+    [Parameter] public ForumViewModel? forum { get; set; }
+    private PostViewModel? ReplyPost;
+    private MudTable<PostViewModel>? _table;
+    private IJSObjectReference? module;
+    private DotNetObjectReference<ForumPostList>? objRef;
+    List<string>? errors;
+    int? ReplyPostId;
+    int RowsPerPage = 5;
+
+
+
+    private string? postText = "Please sign in to create a new post";
+
+    private bool CreatingPost;
+
+    private bool IsAuthenticated;
+
+    protected override async Task OnInitializedAsync()
+    {
+        objRef = DotNetObjectReference.Create(this);
+        module = await _jsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/app.js");
+        IsAuthenticated = await _authService.IsIauthenticated();
+        postText = IsAuthenticated ? "" : "Please sign in to create a new post";
+    }
+
+    private void CreatePostOnClick()
+    {
+        ReplyPostId = null;
+        CreatingPost = true;
+    }
+
+    private void CancelOnClick()
+    {
+        CreatingPost = false;
+        postText = "";
+        ReplyPostId = null;
+    }
+
+    private async Task SubmitOnClick()
+    {
+        errors = new List<string>();
+
+        if (string.IsNullOrEmpty(postText))
+        {
+            errors.Add("Post text must not be blank");
+            StateHasChanged();
+            return;
+        }
+
+        DateTime dateTime = DateTime.UtcNow;
+        var getUserResponse = await _authService.GetLoggedInUser();
+
+        if ((getUserResponse?.Success ?? false))
+        {
+            PostViewModel post = new PostViewModel
+                {
+                    CreatedBy = getUserResponse.Data,
+                    CreatedById = getUserResponse.Data?.Id,
+                    ReplyPostId = ReplyPost?.Id,
+                    CreatedDate = dateTime,
+                    ModifiedDate = dateTime,
+                    ForumId = forum?.Id ?? 0,
+                    Text = postText
+                };
+
+            var newPostResponse = await _postService.CreateNewPost(post);
+
+            if (!(newPostResponse?.Success ?? false))
+            {
+                errors.Add("Unable to create new post");
+            }
+            else
+            {
+                if (newPostResponse.Data != null && ReplyPost != null && newPostResponse.Data.ReplyPostId != null)
+                {
+                    newPostResponse.Data.ReplyPost = ReplyPost;
+                    _snackbar.Add("Reply Posted!", Severity.Success);
+                }
+
+                if (ReplyPost == null) _snackbar.Add("Post Created!", Severity.Success);
+
+                if (forum?.Posts != null && newPostResponse?.Data != null)
+                {
+                    forum.Posts.Add(newPostResponse.Data);
+                    forum.Posts = forum.Posts.OrderByDescending(x => x.ModifiedDate).ToList();
+                }
+
+                var searchResponse = await _searchService.Create(forum, ApiEndpoints.Search);
+
+            }
+
+            CancelOnClick();
+            StateHasChanged();
+        }
+    }
+
+    private void ReplyToPost(PostViewModel replyPost)
+    {
+        ReplyPost = replyPost;
+        ReplyPostId = replyPost.Id;
+        CreatingPost = true;
+    }
+
+    private void PageChanged(int i)
+    {
+        if (_table != null)
+        {
+            _table.NavigateTo(i - 1);
+        }
+    }
+
+    private void RowsPerPageChanged(int i)
+    {
+        RowsPerPage = i;
+    }
+
+    private int GetPostNumber(int id) => (forum?.Posts.Count ?? 0) - (forum?.Posts.FindIndex(x => x.Id == id) ?? 0);
+
+    private async Task postChanged()
+    {
+        var searchResponse = await _searchService.Create(forum, ApiEndpoints.Search);
+        _snackbar.Add("Edit successfully posted", Severity.Success);
+    }
+
+    private async Task ScrollToBottom()
+    {
+        if(module != null)
+        {            
+            await module.InvokeAsync<string>("ScrollToBottom", "PostList");
+        }
+    }    
+}

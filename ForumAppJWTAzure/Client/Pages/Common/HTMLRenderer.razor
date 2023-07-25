@@ -1,0 +1,26 @@
+﻿    <div class="postWrapper">
+        @ChildContent
+    </div>
+
+@code {
+    [Inject] private IJSRuntime _js { get; set; }
+    [Parameter] public string Language { get; set; } = "csharp";
+    [Parameter] public string postText { get; set; }
+    private RenderFragment ChildContent;
+    
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await _js.InvokeVoidAsync("highlightSnippet");
+    }
+
+    private RenderFragment AddContent() => builder =>
+    {
+        builder.AddContent(1, (MarkupString) postText);
+    };
+
+    protected override void OnInitialized()
+    {
+        ChildContent = AddContent();
+    }
+}

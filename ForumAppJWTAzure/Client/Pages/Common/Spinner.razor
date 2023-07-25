@@ -1,0 +1,33 @@
+﻿@if (IsLoading)
+{
+    <div class="spinner-container">
+        <div class="c c1">
+            <div class="c c2">
+                <div class="c c3">
+                    <div class="c c4">
+                        <div class="c c5">
+                            <div class="c c6">
+                                <div class="c c7">
+                                    <div class="c c8"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    @ChildContent
+}
+
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    [Parameter] public bool IsLoading { get; set; }
+
+    [Parameter] public string CssClass { get; set; } = "";
+}

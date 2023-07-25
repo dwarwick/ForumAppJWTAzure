@@ -1,0 +1,45 @@
+﻿@using System.Web;
+<div class="d-flex me-3">
+    <EditForm Model="model" OnSubmit="PerformSearch">
+        <MudStack Row="true">
+            <MudTextField @bind-Value="model.SearchTerm" For="@(() => model.SearchTerm)" Label="Search" />
+            <MudButton ButtonType="ButtonType.Submit" Class="ms-3">Search</MudButton>
+        </MudStack>
+    </EditForm>
+</div>
+
+@code {
+    SearchViewModel model = new() { SearchTerm = "" };
+
+    protected override void OnInitialized()
+    {
+        _searchService.SearchCompleted += (s, e) => SearchCompleted(s, e);
+    }
+
+    private void PerformSearch()
+    {
+        if (!string.IsNullOrEmpty(model.SearchTerm ?? string.Empty))
+        {
+            UriBuilder baseUri = new UriBuilder($"{_navManager.BaseUri}SearchList");
+            string queryToAppend = $"SearchTerm={model.SearchTerm}";
+
+            if (baseUri.Query != null && baseUri.Query.Length > 1)
+                // Note: In .NET Core and .NET 5+, you can simplify by removing
+                // the call to Substring(), which removes the leading "?" character.
+                baseUri.Query = baseUri.Query.Substring(1) + "&" + queryToAppend;
+            else
+                baseUri.Query = queryToAppend;
+
+            string url = HttpUtility.UrlEncode(baseUri.Uri.Query.ToString());
+
+            _navManager.NavigateTo($"{baseUri}", true);
+        }
+    }
+
+    private void SearchCompleted(object sender, string searchTerm)
+    {
+        model.SearchTerm = searchTerm;
+        StateHasChanged();
+    }
+
+}

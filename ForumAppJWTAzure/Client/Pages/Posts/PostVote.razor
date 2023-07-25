@@ -1,0 +1,130 @@
+﻿@implements IAsyncDisposable
+<MudStack Spacing="0" AlignItems="AlignItems.Center">
+    <MudIcon Class="mb-1" Icon="@Icons.Material.Filled.ThumbUp" @onclick="Upvote" Style="cursor:pointer" />
+    <h3 class="my-0">@voteSum</h3>
+    <MudIcon Class="mt-0" Icon="@Icons.Material.Filled.ThumbDown" @onclick="Downvote" Style="cursor:pointer" />
+</MudStack>
+@code {
+    [Parameter] public List<VoteViewModel>? votes { get; set; }
+    [Parameter] public ApplicationUserViewModel? applicationUserViewModel { get; set; }
+    [Parameter] public int postId { get; set; }
+    [Parameter] public string? postCreatedById { get; set; }
+
+    VoteViewModel voteViewModel = new();
+    int voteSum = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (votes == null) votes = new();
+
+        voteSum = votes.Sum(x => x.Value);
+
+        if (_signalRService?.HubConnection?.State == HubConnectionState.Connected)
+        {
+            _signalRService.AddPostVoteViewModel += (s, e) => AddPostVoteViewModel(s, e);
+
+            if (_signalRService.HubConnection != null && postId > 0)
+            {
+                await _signalRService.HubConnection.SendAsync("AddToGroup", $"postVote{postId}");
+            }
+        }
+    }
+
+    private async Task Upvote()
+    {
+        await Vote(1);
+    }
+
+    private async Task Downvote()
+    {
+        await Vote(-1);
+    }
+
+    private async Task Vote(int vote)
+    {
+        if (applicationUserViewModel != null && postCreatedById != null && applicationUserViewModel.Id != postCreatedById)
+        {
+            if ((votes?.Any(x => x.CreatedById == (applicationUserViewModel?.Id ?? ""))) ?? false)
+            {
+                VoteViewModel? model = votes.FirstOrDefault(x => x.CreatedById == (applicationUserViewModel?.Id ?? ""));
+
+                if (model != null)
+                {
+                    votes.Remove(model);
+                }
+            }
+
+            VoteViewModel NewVote = new()
+                {
+                    PostId = postId,
+                    Value = vote,
+                    CreatedById = applicationUserViewModel?.Id ?? ""
+                };
+
+            var response = await _voteService.Create(NewVote, ApiEndpoints.Vote);
+
+            if (response.Success && response.Data != null && votes != null)
+            {
+                NewVote = response.Data;
+                votes.Add(NewVote);
+                voteSum = votes.Sum(x => x.Value);
+
+                if (_signalRService.HubConnection != null)
+                {
+                    string serializedPost = JsonConvert.SerializeObject(response.Data, Formatting.None, new JsonSerializerSettings() { ReferenceLoopHandling = ReferenceLoopHandling.Ignore });
+
+                    if (!string.IsNullOrEmpty(serializedPost))
+                    {
+                        await _signalRService.HubConnection.SendAsync("AddPostVoteViewModel", serializedPost ?? string.Empty, postId);
+                    }
+                }
+            }
+        }
+        else
+        {
+            _snackbar.Add(Lookups.ToasterText.YouMustBeLoggedInToVote, Severity.Error);
+        }
+    }
+
+    private void AddPostVoteViewModel(object? sender, string viewModel)
+    {
+        if (viewModel == null) return;
+
+        VoteViewModel? model = JsonConvert.DeserializeObject<VoteViewModel>(viewModel);
+
+        if (model?.PostId != postId) return;
+
+        if (model != null)
+        {
+            if((votes?.Any(x => x.PostId == model.PostId && x.CreatedById == model.CreatedById) ?? false))
+            {
+                VoteViewModel? existingVote = votes.FirstOrDefault(x => x.PostId == model.PostId && x.CreatedById == model.CreatedById);
+
+                if(existingVote != null)
+                {
+                    votes.Remove(existingVote);
+                }
+            }
+
+            if(model.CreatedById != (applicationUserViewModel?.Id ?? ""))
+            {
+                votes?.Add(model);
+                voteSum = votes?.Sum(x => x.Value) ?? 0;
+            }            
+        }        
+        
+        StateHasChanged();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if ((_signalRService?.HubConnection?.State ?? HubConnectionState.Disconnected) == HubConnectionState.Connected && postId > 0)
+        {
+            if (_signalRService != null && _signalRService.HubConnection != null && postId > 0)
+            {
+                await _signalRService.HubConnection.SendAsync("RemoveFromGroup", $"postVote{postId}");
+                _signalRService.AddPostVoteViewModel -= AddPostVoteViewModel;
+            }
+        }
+    }
+}

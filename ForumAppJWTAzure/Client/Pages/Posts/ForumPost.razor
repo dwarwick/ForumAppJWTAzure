@@ -1,0 +1,176 @@
+﻿<MudCard>
+    <MudCardHeader Class="py-0">
+        <MudCardContent Class="py-0 w-100">
+            <div class="d-flex">
+                <div class="d-flex align-items-start">
+                    <MudStack>
+                        <UserNameComponent displayName="@(post?.CreatedBy?.DisplayName ?? "")" ProfilePicture="@post?.CreatedBy?.ProfilePicture" />
+                        @if(post != null)
+                        {
+                            <div class="mx-1 mt-auto">Post# @PostIndex Created @StringHelper.GetLocalDate(post?.CreatedDate)</div>
+                        }                        
+                    </MudStack>
+                    @if (post?.CreatedBy?.Id == (ForumCreatedById ?? ""))
+                    {
+                        <div class="ms-3 mt-auto h-100" style="background-color:#274F80;font-weight:700;max-height:20px;">Forum Author</div>
+                    }
+
+
+                </div>
+                @if (Disabled)
+                {
+                    @if (post != null && post?.CreatedDate != post?.ModifiedDate)
+                    {
+                        <div class="mt-auto ms-1">
+                            <span>Edited @StringHelper.GetLocalDate(post?.ModifiedDate)</span>
+                        </div>
+                    }
+
+                    <div class="ms-auto">
+                        <div class="d-flex justify-space-between h-100">
+                            @if (post?.ReplyPost != null)
+                            {
+                                <div class="d-flex flex-column">                                    
+                                    <UserNameComponent displayName="@(post?.ReplyPost?.CreatedBy?.DisplayName ?? "")" ProfilePicture="@post?.ReplyPost?.CreatedBy?.ProfilePicture" />
+                                    <div class="mx-1 mt-auto">Replied Post # @ReplyPostNumber</div>
+                                </div>
+                            }
+                            @if(post != null)
+                            {
+                                <PostVote applicationUserViewModel="applicationUserViewModel" postId="@(post?.Id ?? 0)" votes="@post?.Votes" postCreatedById="@post?.CreatedBy?.Id" />   
+                            }                                                    
+                        </div>
+                    </div>
+
+                }
+                else
+                {
+                    <div class="ms-auto">Editing</div>
+                }
+
+
+            </div>
+        </MudCardContent>
+    </MudCardHeader> @* End of card header *@
+    <MudCardContent>
+        @if (Disabled && !string.IsNullOrEmpty(postText))
+        { // read only
+
+            @*<Editor @ref="ReadOnlyEditor" ScriptSrc="lib/tinymce/tinymce.min.js" JsConfSrc="editorConf" @bind-Value="@postText" />*@
+            <HTMLRenderer postText="@postText"/>
+
+            @if ((applicationUserViewModel != null && post?.CreatedBy != null) && (post.CreatedBy.Id == applicationUserViewModel.Id))
+            {
+                <div class="card-footer">
+                    <i class="bi bi-pencil" @onclick="EditPostOnClick" style="cursor:pointer"> Edit</i>
+                </div>
+            }
+
+            @if (applicationUserViewModel != null && post?.CreatedBy != null && post?.CreatedBy.Id != applicationUserViewModel.Id)
+            {
+                <div class="card-footer">
+                    <i class="bi bi-reply mx-2" @onclick="ReplyPostOnClick" style="cursor:pointer"> Reply</i>
+                </div>
+            }
+
+        }
+        else
+        { //editing
+
+            <Editor ScriptSrc="lib/tinymce/tinymce.min.js" JsConfSrc="tinyMceConf" Disable="@Disabled" @bind-Value="@postText" />
+
+            <div class="card-footer">
+                <i class="bi bi-save" @onclick="SavePostOnClickAsync" style="cursor:pointer"> Save</i>
+                <button class="bi bi-door-open" style="background-color:transparent;border:none;color:aliceblue;" @onclick="@CancelOnClick"> Cancel</button>
+            </div>
+        }
+    </MudCardContent>
+</MudCard>
+
+@code {
+    ApplicationUserViewModel? applicationUserViewModel { get; set; }
+    [Parameter] public PostViewModel? post { get; set; }
+    [Parameter] public string? ForumCreatedById { get; set; }
+    [Parameter] public EventCallback<PostViewModel> OnReplying { get; set; }
+    [Parameter] public int PostIndex { get; set; }
+    [Parameter] public Func<int,int>? PostIndexFunc { get; set; }
+    [Parameter] public EventCallback<PostViewModel> postChanged { get; set; }
+
+    Editor? ReadOnlyEditor;
+    int ReplyPostNumber;
+
+    string? postText;
+    private string? OriginalText;
+
+    private bool Disabled = true;
+    private bool rendered = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var response = await _authService.GetLoggedInUser();
+
+        if (response.Success)
+        {
+            applicationUserViewModel = response.Data;
+        }
+
+        postText = post?.Text ?? "";
+
+        if((post?.ReplyPost?.Id ?? 0) != 0 )
+        {
+            ReplyPostNumber = PostIndexFunc(post?.ReplyPost?.Id ?? 0);
+        }
+
+        StateHasChanged();
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender) 
+        { 
+            rendered = true;
+
+            if(ReadOnlyEditor != null)
+            {
+                ReadOnlyEditor.AdditionalAttributes = new Dictionary<string, object>() { { "readonly", true } };
+            }
+        }
+    }
+
+    void EditPostOnClick()
+    {
+        Disabled = false;
+        OriginalText = postText;
+
+        StateHasChanged();
+    }
+
+    async Task ReplyPostOnClick()
+    {
+        await OnReplying.InvokeAsync(post);        
+    }
+
+    async Task SavePostOnClickAsync()
+    {
+        Disabled = true;
+
+        if (OriginalText == postText || post == null) return;
+
+        post.ModifiedDate = DateTime.Now;
+        post.Text = postText;
+
+        Response<PostViewModel> response = await _postService.EditPost(post);
+
+        if(response.Success)
+        {            
+            await postChanged.InvokeAsync(response.Data);
+        }        
+    }
+
+    void CancelOnClick()
+    {
+        Disabled = true;
+
+        StateHasChanged();
+    }
+}

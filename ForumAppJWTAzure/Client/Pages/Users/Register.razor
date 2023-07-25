@@ -1,0 +1,58 @@
+﻿@page "/users/register"
+<MudCard>
+    <MudCardHeader><h3>Register New Account</h3></MudCardHeader>
+    <MudCardContent>
+        <EditForm Model="RegistrationModel" OnSubmit="HandleRegistration">
+            <FluentValidationValidator @ref="Validator" Options="@(options => options.IncludeAllRuleSets())" />
+            <ValidationSummary />
+            <MudTextField @bind-Value="RegistrationModel.Email" For="@(() => RegistrationModel.Email)" Immediate="true" Label="Email Address" />
+            <MudTextField @bind-Value="RegistrationModel.DisplayName" For="@(() => RegistrationModel.DisplayName)" Immediate="true" Label="Display Name" />
+            <MudTextField @bind-Value="RegistrationModel.Password" For="@(() => RegistrationModel.Password)" Immediate="true" Label="Password" InputType="InputType.Password" />
+            <MudTextField @bind-Value="RegistrationModel.ConfirmPassword" For="@(() => RegistrationModel.ConfirmPassword)" Immediate="true" Label="Confirm Password" InputType="InputType.Password" />
+            <MudCardActions>
+                <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Outlined" Class="mt-3">Register</MudButton></MudCardActions>
+        </EditForm>
+    </MudCardContent>
+</MudCard>
+@code {
+    UserDto RegistrationModel = new UserDto
+        {
+            Role = "User"
+        };
+    private FluentValidationValidator? Validator;
+
+    private async Task HandleRegistration()
+    {
+        try
+        {
+            if (await Validator!.ValidateAsync())
+            {
+                Console.WriteLine("Form Submitted Successfully!");
+            }
+
+            HttpResponseMessage response = await _authService.RegisterAsync(RegistrationModel);
+
+            if (response.IsSuccessStatusCode)
+            {
+                NavigateToLogin();
+            }
+            else
+            {
+
+            }
+        }
+        catch (ApiException ex)
+        {
+            if (ex.StatusCode >= 200 && ex.StatusCode <= 299)
+            {
+                NavigateToLogin();
+            }
+        }
+    }
+
+
+    private void NavigateToLogin()
+    {
+        _navManager.NavigateTo("/users/login");
+    }
+}

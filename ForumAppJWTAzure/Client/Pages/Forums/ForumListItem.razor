@@ -1,0 +1,135 @@
+﻿@implements IAsyncDisposable
+
+@if (forum?.Posts?.Count > 0)
+{
+    <MudCard @onclick="SelectedForum" Elevation="5" Class="cursor-pointer">
+
+        <MudCardHeader Class="py-0">
+            <MudCardContent Class="pt-0"><MudText Typo="Typo.h6">@forum.Title</MudText></MudCardContent>
+        </MudCardHeader>
+
+        <MudCardContent Class="py-0">
+            <div class="d-flex justify-content-between pb-3">
+                <UserNameComponent displayName="@(forum.CreatedBy?.DisplayName ?? "")" ProfilePicture="@forum.CreatedBy?.ProfilePicture" />                
+                    <MudPaper Class="mt-2 p-4" Elevation="5">
+                        @if (forum.Tags != null)
+                        {
+                            <MudStack Row="true">
+                                @foreach (TagViewModel selectedTag in forum.Tags)
+                                {
+                                    <MudChip Color="Color.Primary">@selectedTag.Name</MudChip>
+                                }
+                            </MudStack>
+                        }
+                    </MudPaper>                
+                <UserNameComponent displayName="@(MostRecentPost != null ? (MostRecentPost?.CreatedBy!.DisplayName) : string.Empty)" ProfilePicture="@MostRecentPost?.CreatedBy?.ProfilePicture" />
+            </div>
+
+            <MudStack Row="true" Justify="Justify.SpaceBetween">
+                <div>Created: @StringHelper.GetLocalDate(forum.CreatedDate)</div>
+                <div>@messageCount posts</div>
+                <div>Most Recent Post: @StringHelper.GetLocalDate(MostRecentPost?.ModifiedDate)</div>
+            </MudStack>
+
+        </MudCardContent>
+        @*<div class="card-footer">
+    <ForumTagsComponent ForumId="@forum.Id" />
+    </div>*@
+    </MudCard>
+
+    @if (selectedForum)
+    {
+        <MudDialog IsVisible="@IsOpen" Options="dialogOptions" IsVisibleChanged="IsVisibleChanged" Style="width:95vw;height:100vh;max-height:unset;">
+            <TitleContent><MudText Typo="Typo.h6">@forum.Title</MudText></TitleContent>
+            <DialogContent>
+                <ForumPostList forum="@forum" />
+            </DialogContent>
+            @*<DialogActions>
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Submit" Class="px-10">Close</MudButton>
+    </DialogActions>*@
+        </MudDialog>
+    }
+}
+else
+{
+    <p>No posts to display</p>
+}
+
+
+@code {
+    [Parameter] public ForumViewModel? forum { get; set; }
+    [Parameter] public string? RowColor { get; set; }
+    private DialogOptions dialogOptions = new()
+        {
+
+            //FullWidth = true,
+            DisableBackdropClick = true,
+            CloseButton = true//,
+            //FullScreen = true
+        };
+    PostViewModel? MostRecentPost;
+
+    bool selectedForum = false;
+    private bool IsOpen = true;
+
+    int messageCount = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (_signalRService?.HubConnection?.State == HubConnectionState.Connected)
+        {
+            _signalRService.AddPostViewModel += (s, e) => AddPostViewModel(s, e);
+
+            if (_signalRService.HubConnection != null && forum != null)
+            {
+                await _signalRService.HubConnection.SendAsync("AddToGroup", $"post{forum?.Id}");
+            }
+        }
+
+        selectedForum = false;
+        IsOpen = true;
+    }
+
+    protected override void OnParametersSet()
+    {
+        messageCount = forum?.Posts?.Count ?? 0;
+        MostRecentPost = forum?.Posts?.OrderByDescending(x => x.ModifiedDate).FirstOrDefault();
+    }
+
+    private void SelectedForum()
+    {
+        selectedForum = true;
+
+    }
+
+    private void IsVisibleChanged()
+    {
+        selectedForum = false;
+        StateHasChanged();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if ((_signalRService?.HubConnection?.State ?? HubConnectionState.Disconnected) == HubConnectionState.Connected && forum != null)
+        {
+            if(_signalRService != null && _signalRService.HubConnection != null && forum != null)
+            {
+                await _signalRService.HubConnection.SendAsync("RemoveFromGroup", $"post{forum?.Id ?? 0}");
+                _signalRService.AddPostViewModel -= AddPostViewModel;
+            }
+        }
+    }
+
+    private void AddPostViewModel(object? sender, string? viewModel)
+    {
+        if (viewModel == null) return;
+
+        PostViewModel? model = JsonConvert.DeserializeObject<PostViewModel>(viewModel);
+
+        if (model?.ForumId != forum?.Id) return;
+
+        if (model != null) forum?.Posts?.Add(model);
+        messageCount = forum?.Posts?.Count ?? 0;
+        StateHasChanged();
+    }
+}

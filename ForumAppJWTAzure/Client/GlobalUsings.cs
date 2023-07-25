@@ -8,6 +8,7 @@ global using ForumAppJWTAzure.Client.Services;
 global using ForumAppJWTAzure.Client.Services.Base;
 global using ForumAppJWTAzure.Client.Services.Authentication;
 global using ForumAppJWTAzure.Shared.ViewModels;
+global using FluentValidation;
 global using Blazored.LocalStorage;
 global using ForumAppJWTAzure.Shared.Models.User;
 global using System.Text;

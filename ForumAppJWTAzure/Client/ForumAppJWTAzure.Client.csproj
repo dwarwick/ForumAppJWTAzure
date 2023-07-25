@@ -22,6 +22,7 @@
     <PackageReference Include="MudBlazor" Version="6.7.0" />
     <PackageReference Include="TinyMCE" Version="6.5.1" />
     <PackageReference Include="TinyMCE.Blazor" Version="1.0.4" />
+    <PackageReference Include="Blazored.FluentValidation" Version="2.1.0" />
     <PackageReference Include="Blazored.LocalStorage" Version="4.3.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>

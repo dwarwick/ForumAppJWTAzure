@@ -1,0 +1,181 @@
+﻿@page "/forum"
+@attribute [Authorize]
+
+@if (tagArray != null)
+{
+    
+        <MudCard>
+            <EditForm Model="@forum" OnValidSubmit="@SubmitOnClickAsync">
+                <FluentValidationValidator @ref="Validator" Options="@(options => options.IncludeAllRuleSets())" />
+
+
+                <MudCardHeader><MudText Typo="Typo.h3">Create New Forum Post</MudText></MudCardHeader>
+                <MudCardContent>
+                    <ValidationSummary style="color:#f64e62ff;" />
+
+                    <MudTextField Class="mb-2" @bind-Value="forum.Title" For="@(() => forum.Title)" Immediate="true" Label="Forum Title" />
+
+                    @* Configured in tinyMceConf.js *@
+                    <Editor ScriptSrc="lib/tinymce/tinymce.min.js" JsConfSrc="tinyMceConf" @bind-Value="forum.PostText" Field="() => forum.PostText" ValidateOnInput="@true" />
+
+                    <MudAutocomplete T="string" Label="Tags" Value="selectedTagString" SearchFunc="@Search1" MaxItems="null" ResetValueOnEmptyText="true" ValueChanged="@(e => SelectedTagString(e))" CoerceText="true" CoerceValue="true" />
+
+                    <MudPaper Class="mt-2 p-4" Elevation="5">
+                        @if (forum.Tags != null)
+                        {
+                            <MudStack Row="true">
+                                @foreach (TagViewModel selectedTag in forum.Tags)
+                                {
+                                    <MudChip Color="Color.Primary" OnClose="(() => SelectedTagRemoved(selectedTag.Name))">@selectedTag.Name</MudChip>
+                                }
+                            </MudStack>
+                        }
+                    </MudPaper>
+                </MudCardContent>
+
+                <MudCardActions>
+                    <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Outlined" Class="me-2">Submit</MudButton>
+                    <MudButton OnClick="CancelOnClick" Variant="Variant.Outlined">Cancel</MudButton>
+                </MudCardActions>
+
+            </EditForm>
+        </MudCard>
+    
+}
+
+
+@code {
+    private FluentValidationValidator? Validator;
+    List<string>? errors;
+    ForumViewModel forum { get; set; } = new();
+    List<PostViewModel> posts = new List<PostViewModel>();
+    List<TagViewModel>? allTags;
+    string[] tagArray = { };
+    string? selectedTagString;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var response = await _authService.GetLoggedInUser();
+        DateTime dateTime = DateTime.UtcNow;
+
+        if ((response?.Success ?? false) && response.Data != null)
+        {
+            posts = new List<PostViewModel>();
+
+            PostViewModel post = new PostViewModel
+            {
+
+            };
+
+            forum = new()
+                {
+                    CreatedBy = response.Data,
+                    CreatedById = response.Data.Id,
+                    CreatedDate = dateTime,
+                    ModifiedDate = dateTime
+                };
+        }
+        else
+        {
+            _navManager.NavigateTo("/forumlist");
+        }
+
+        Response<List<TagViewModel>> tagResponse = await _tagService.Get<TagViewModel>(ApiEndpoints.GetAllTags);
+
+        if (tagResponse.Success && tagResponse.Data != null)
+        {
+            allTags = tagResponse.Data;
+
+
+            if (allTags.Count > 0) tagArray = allTags.Select(x => x.Name ?? "").Order().ToArray();
+        }
+    }
+
+
+    async Task SubmitOnClickAsync()
+    {
+        if (await Validator!.ValidateAsync())
+        {
+            errors = new();
+            posts.Add(new PostViewModel()
+                {
+                    CreatedBy = forum.CreatedBy,
+                    CreatedById = forum.CreatedById,
+                    CreatedDate = forum.CreatedDate,
+                    ModifiedDate = forum.ModifiedDate,
+                    Text = forum.PostText
+                });
+
+            forum.Posts = posts;
+
+            var response = await _forumService.CreateNewForum(forum);
+
+            if (!response.Success)
+            {
+                errors.Add("Unable to create new forum");
+            }
+            else
+            {
+                var searchResponse = await _searchService.Create(response.Data, ApiEndpoints.Search);
+            }
+        }
+
+        _navManager.NavigateTo("/forumlist");
+    }
+
+    void CancelOnClick()
+    {
+        forum = new();
+        //errors = new();
+        //await OnForumCreated.InvokeAsync();
+    }
+
+
+
+    private void SelectedTagRemoved(string? tagText)
+    {
+        if (allTags == null || forum.Tags == null || tagText == null) return;
+
+        TagViewModel? tagViewModel = allTags.FirstOrDefault(x => x.Name == tagText);
+
+        if (tagViewModel != null)
+        {
+            tagArray.Append(tagViewModel.Name);
+            forum.Tags.Remove(tagViewModel);
+
+            StateHasChanged();
+        }
+    }
+
+    private async Task<IEnumerable<string>> Search1(string value)
+    {
+        // In real life use an asynchronous function for fetching data from an api.
+        await Task.Delay(5);
+
+        // if text is null or empty, show complete list
+        if (string.IsNullOrEmpty(value))
+            return tagArray;
+        return tagArray.Where(x => x.Contains(value, StringComparison.InvariantCultureIgnoreCase));
+    }
+
+    private void SelectedTagString(string value)
+    {
+        selectedTagString = value;
+
+        if (selectedTagString == null || selectedTagString == "" || allTags == null || forum.Tags == null) return;
+
+        TagViewModel? tagViewModel = allTags?.FirstOrDefault(x => x.Name!.Equals(value, StringComparison.OrdinalIgnoreCase));
+
+
+
+        if (tagViewModel != null)
+        {
+            tagArray = tagArray.Where(x => !x.Equals(value, StringComparison.OrdinalIgnoreCase)).ToArray();
+            forum.Tags.Add(tagViewModel);
+        }
+
+        if (tagArray.Length == 0) selectedTagString = "";
+
+        StateHasChanged();
+    }
+}

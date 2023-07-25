@@ -1,0 +1,246 @@
+﻿@page "/profile"
+@attribute [Authorize]
+
+<h3>Profile</h3>
+
+<div class="row">
+    <div class="col" id="Left">
+
+        <MudCard>
+            <EditForm Model="@viewModel">
+                <FluentValidationValidator @ref="Validator" Options="@(options => options.IncludeAllRuleSets())" />
+                <ValidationSummary />
+                <MudCardContent>
+                    @*<ValidationSummary />*@
+                    <MudStack Row="true" AlignItems="AlignItems.End">
+                        <MudTextField @bind-Value="viewModel.Email" For="@(() => viewModel.Email)" Immediate="true" Label="Email Address" Disabled="@(!EditEmail)" />
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit" OnClick="EditEmailOnClick" />
+                    </MudStack>
+                    <MudStack Row="true" AlignItems="AlignItems.End">
+                        <MudTextField @bind-Value="viewModel.DisplayName" For="@(() => viewModel.DisplayName)" Immediate="true" Label="Display Name" Disabled="@(!EditDisplayName)" />
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit" OnClick="EditDisplayNameOnClick" />
+                    </MudStack>
+
+                    <MudDivider Class="mt-10" />
+                    <MudStack Row="true" AlignItems="AlignItems.End">
+                        <MudText>Edit Password</MudText>
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit" OnClick="EditPasswordOnClick" />
+                    </MudStack>
+                    <MudTextField @bind-Value="viewModel.CurrentPassword" For="@(() => viewModel.CurrentPassword)" Immediate="true" Label="Current Password" InputType="InputType.Password" Disabled="@(!EditPassword)" />
+                    <MudTextField @bind-Value="viewModel.Password" For="@(() => viewModel.Password)" Immediate="true" Label="New Password" InputType="InputType.Password" Disabled="@(!EditPassword)" />
+                    <MudTextField @bind-Value="viewModel.ConfirmPassword" For="@(() => viewModel.ConfirmPassword)" Immediate="true" Label="Confirm New Password" InputType="InputType.Password" Disabled="@(!EditPassword)" />
+                </MudCardContent>
+            </EditForm>
+        </MudCard>
+
+    </div>
+
+    <div class="col" id="Right">
+        <MudCard>
+            <MudCardHeader><MudText Typo="Typo.h5" Style="font-weight:500">Edit Profile Picture</MudText></MudCardHeader>
+            <MudCardContent>
+                <MudStack Row="true" AlignItems="AlignItems.End">
+                    @if (ShowCropper)
+                    {
+                        <ImageCropper updatedImage="@DisplayUpdatedImage" />
+                    }
+
+                    @if (viewModel.ProfilePicture != null)
+                    {
+                        <img id="ProfilePic" src="@viewModel.ProfilePicture" @onclick="ShowImageCropper" />
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit" OnClick="ShowImageCropper" />
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" OnClick="DeleteProfilePictureOnClick" />
+                    }
+                    else
+                    {
+                        <MudIcon Icon="@Icons.Material.Filled.Person" Size="Size.Large" />
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit" OnClick="ShowImageCropper" />
+                    }
+                </MudStack>
+            </MudCardContent>
+        </MudCard>
+    </div>
+
+</div>
+
+@code {
+    ApplicationUserViewModel? applicationUserViewModel { get; set; }
+    UserProfileViewModel viewModel = new()
+        {
+            Role = "User"
+        };
+
+    private FluentValidationValidator? Validator;
+    private IJSObjectReference? module;
+    private bool EditEmail { get; set; } = false;
+    private bool EditDisplayName { get; set; } = false;
+    private bool EditPassword { get; set; } = false;
+    private bool ShowCropper = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await UpdateViewModel();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            module = await _jsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/app.js");
+        }
+
+        if (module == null) return;
+        if (ShowCropper) await module.InvokeAsync<string>("WaitForProfilePictureUploadButton");
+    }
+
+    private async Task EditEmailOnClick()
+    {
+        if (EditEmail && applicationUserViewModel?.Email != viewModel.Email)
+        {
+            if (await Validator!.ValidateAsync())
+            {
+                applicationUserViewModel!.ModifiedDate = DateTime.UtcNow;
+                applicationUserViewModel!.Email = viewModel.Email ?? "";
+                applicationUserViewModel.NormalizedEmail = viewModel?.Email?.ToUpper() ?? "";
+                applicationUserViewModel.UserName = viewModel?.Email ?? "";
+                applicationUserViewModel.NormalizedUserName = viewModel?.Email?.ToUpper() ?? "";
+
+                Response<ApplicationUserViewModel> response = await _authService.UpdateUserAsync(applicationUserViewModel);
+
+                if (response.Success)
+                {
+                    _snackbar.Add("Email Address Updated Successfully", Severity.Success);
+                }
+                else
+                {
+                    _snackbar.Add("Error Updating Email Address", Severity.Error);
+                }
+            }
+        }
+
+        EditEmail = !EditEmail;
+        StateHasChanged();
+    }
+
+    private async Task EditDisplayNameOnClick()
+    {
+        if (EditDisplayName && applicationUserViewModel?.DisplayName != viewModel.DisplayName)
+        {
+            if (await Validator!.ValidateAsync())
+            {
+                applicationUserViewModel!.ModifiedDate = DateTime.UtcNow;
+                applicationUserViewModel!.DisplayName = viewModel.DisplayName ?? "";
+                Response<ApplicationUserViewModel> response = await _authService.UpdateUserAsync(applicationUserViewModel);
+
+                if (response.Success)
+                {
+                    _snackbar.Add("Display Name Updated Successfully", Severity.Success);
+                }
+                else
+                {
+                    _snackbar.Add("Error Updating Display Name", Severity.Error);
+                }
+            }
+        }
+        EditDisplayName = !EditDisplayName;
+        StateHasChanged();
+    }
+
+    private async Task EditPasswordOnClick()
+    {
+        if (EditPassword)
+        {
+            if (await Validator!.ValidateAsync())
+            {
+                Response<ApplicationUserViewModel> response = await _authService.UpdatePasswordAsync(viewModel);
+
+                if (response.Success)
+                {
+                    _snackbar.Add("Password Updated Successfully", Severity.Success);
+                }
+                else
+                {
+                    _snackbar.Add("Error Updating Password", Severity.Error);
+                }
+            }
+        }
+
+        EditPassword = !EditPassword;
+        StateHasChanged();
+    }
+
+    private async Task UpdateViewModel()
+    {
+        if (await _authService.IsIauthenticated())
+        {
+            Response<ApplicationUserViewModel>? response = await _authService.GetLoggedInUser();
+
+            if (response?.Success ?? false) applicationUserViewModel = response.Data;
+        }
+
+        if (applicationUserViewModel != null)
+        {
+            viewModel = new();
+
+            StateHasChanged();
+
+            viewModel = new()
+                {
+                    DisplayName = applicationUserViewModel.DisplayName,
+                    Email = applicationUserViewModel.Email,
+                    ProfilePicture = applicationUserViewModel.ProfilePicture
+                };
+        }
+    }
+
+    private async Task DisplayUpdatedImage()
+    {
+        ShowCropper = false;
+        await UpdateViewModel();
+        StateHasChanged();
+    }
+
+    private void ShowImageCropper()
+    {
+        ShowCropper = true;
+    }
+
+    private async Task DeleteProfilePictureOnClick()
+    {
+        StorageViewModel model = new() { ContainerName = "profile-pics", Uri = applicationUserViewModel?.ProfilePicture ?? "" };
+        bool deleteRespone = await _storageService.DeleteAsync(model);
+
+        
+
+        if (deleteRespone)
+        {
+            applicationUserViewModel!.ProfilePicture = null;
+            var response = await _authService.UpdateUserAsync(applicationUserViewModel);
+
+            if (response.Success)
+            {
+                applicationUserViewModel = response.Data;
+
+                _snackbar.Add("Profile picture deleted Successfully", Severity.Success);
+            }
+            else
+            {
+                _snackbar.Add("Error deleting profile picture", Severity.Error);
+            }
+        }
+        else
+        {
+            _snackbar.Add("Error deleting profile picture", Severity.Error);
+        }
+
+        await UpdateViewModel();
+
+        StateHasChanged();
+    }
+}
+
+<style>
+    .mud-icon-button {
+        padding-bottom: 0px;
+    }
+</style>

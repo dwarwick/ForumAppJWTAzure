@@ -1,0 +1,41 @@
+﻿@page "/searchlist"
+@using System.Web;
+@if (searchForums != null && searchForums.Count > 0)
+{
+    <Forums searchForums="@searchForums" />
+}
+else
+{
+    <MudPaper Style="display:flex;justify-content:center;align-items:center;background-color:lightcoral" Elevation="3" Height="100px">
+        <MudText Typo="Typo.h5">No Results Match Your Search Term</MudText>
+    </MudPaper>
+}
+
+
+@code {
+    [SupplyParameterFromQuery] public string? SearchTerm { get; set; }
+    public List<ForumViewModel>? searchForums { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        //if (!string.IsNullOrEmpty(SearchTerm))
+        //{
+        string uri = HttpUtility.UrlDecode(_navManager.Uri);
+
+        if (!uri.Contains("=")) return;
+
+        SearchTerm = uri.Split('=')[1];
+
+        var response = await _searchService.SearchBySearchTerm(new SearchViewModel() { SearchTerm = SearchTerm });
+
+        if ((response?.Success ?? false))
+        {
+            searchForums = new();
+
+            if (response.Data != null)
+            {
+                searchForums.AddRange(response.Data);
+            }
+        }
+    }
+}

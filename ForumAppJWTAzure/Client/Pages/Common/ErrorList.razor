@@ -1,0 +1,13 @@
+﻿@if (errors != null && errors.Count > 0)
+{
+    <ul>
+        @foreach (string error in errors)
+        {
+            <li style="color:red">@error</li>
+        }
+    </ul>
+}
+
+@code {
+    [Parameter] public List<string>? errors { get; set; }
+}

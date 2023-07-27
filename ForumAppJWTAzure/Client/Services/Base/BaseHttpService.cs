@@ -109,6 +109,39 @@ namespace ForumAppJWTAzure.Client.Services.Base
             return response;
         }
 
+        public virtual async Task<Response<List<T>>> GetAll<T>(string endPoint)
+        {
+            Response<List<T>> response;
+            try
+            {
+                var responseMessage = await this.client.GetAsync(endPoint);
+
+                if (responseMessage.IsSuccessStatusCode)
+                {
+                    var jsonString = responseMessage.Content.ReadAsStringAsync().Result;
+                    var myObject = JsonConvert.DeserializeObject<List<T>>(jsonString);
+
+                    response = new Response<List<T>>
+                    {
+                        Data = myObject ?? new List<T>(),
+                        Success = true,
+                    };
+
+                    return response;
+                }
+                else
+                {
+                    return new Response<List<T>> { Data = new List<T> { }, Message = responseMessage.ReasonPhrase ?? string.Empty, Success = false };
+                }
+            }
+            catch (ApiException exception)
+            {
+                response = this.ConvertApiExceptions<List<T>>(exception);
+            }
+
+            return response;
+        }
+
         protected Response<TGuid> ConvertApiExceptions<TGuid>(ApiException apiException)
         {
             if (apiException.StatusCode == 400)

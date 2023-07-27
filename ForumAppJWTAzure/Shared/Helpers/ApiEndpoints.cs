@@ -20,6 +20,7 @@
         public const string DeleteProfilePic = "api/storage/deleteprofilepic";
         public const string Search = "api/search";
         public const string Vote = "api/votes";
+        public const string AppLog = "api/applog";
 
         public const string SearchBySearchTerm = "api/search/searchbysearchterm";
     }

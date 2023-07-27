@@ -1,14 +1,22 @@
-﻿namespace ForumAppJWTAzure.Server.Controllers
+﻿using ForumAppJWTAzure.Shared.Helpers;
+using Newtonsoft.Json;
+using System.Security.AccessControl;
+
+namespace ForumAppJWTAzure.Server.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
     public class StorageController : ControllerBase
     {
         private readonly IConfiguration configuration;
-
-        public StorageController(IConfiguration configuration)
+        private readonly IApplogService appLogService;
+        private readonly UserManager<ApplicationUser> userManager;
+        private string classFileName = "StorageController";
+        public StorageController(IConfiguration configuration, IApplogService appLogService, UserManager<ApplicationUser> userManager)
         {
             this.configuration = configuration;
+            this.appLogService = appLogService;
+            this.userManager = userManager;
         }
 
         // GET: api/<StorageController>
@@ -29,6 +37,9 @@
         [Route("uploadprofilepic")]
         public async Task<ActionResult<StorageViewModel>> Post(StorageViewModel model)
         {
+            AppLog log = new() { FileName = classFileName, Method = "Post", Project = Lookups.Project.Server, Message = $"Uploading {model.Guid}", Severity = Lookups.Severity.Info };
+            await appLogService.UploadLogEntry(log, await GetApplicationUserId());
+            Console.WriteLine($"{JsonConvert.SerializeObject(model)}");
             StorageViewModel viewModel = new StorageViewModel();
 
             try
@@ -37,8 +48,14 @@
                 {
                     BlobClient client = new BlobClient(this.configuration["BlobStorage:PrimaryConnectionString"], model.ContainerName, $"{model.Guid}.png");
 
+                    log = new() { FileName = classFileName, Method = "Post", Project = Lookups.Project.Server, Message = "Created Client", Severity = Lookups.Severity.Info };
+                    await appLogService.UploadLogEntry(log, await GetApplicationUserId());
+
                     var encodedImage = model.Base64.Contains(",") ? model.Base64.Split(',')[1] : model.Base64;
                     var decodedImage = Convert.FromBase64String(encodedImage);
+
+                    log = new() { FileName = classFileName, Method = "Post", Project = Lookups.Project.Server, Message = "Decoded Image", Severity = Lookups.Severity.Info };
+                    await appLogService.UploadLogEntry(log, await GetApplicationUserId());
 
                     using (var image = Image.Load(decodedImage))
                     {
@@ -63,21 +80,35 @@
                         using Stream stream = new MemoryStream();
 
                         image.SaveAsPng(stream);
+
+                        log = new() { FileName = classFileName, Method = "Post", Project = Lookups.Project.Server, Message = "Saved Image", Severity = Lookups.Severity.Info };
+                        await appLogService.UploadLogEntry(log, await GetApplicationUserId());
+
                         stream.Position = 0; // The position needs to be reset.
 
                         await client.UploadAsync(stream, true);
+
+                        log = new() { FileName = classFileName, Method = "Post", Project = Lookups.Project.Server, Message = "Uploaded Image", Severity = Lookups.Severity.Info };
+                        await appLogService.UploadLogEntry(log, await GetApplicationUserId());
+
                         viewModel = new()
                         {
                             Uri = client.Uri.ToString(),
                         };
+                        
+                        return this.CreatedAtAction("Post", viewModel);
                     }
                 }
-
-                return this.CreatedAtAction("Post", viewModel);
+                else
+                {
+                    log = new() { FileName = classFileName, Method = "Post", Project = Lookups.Project.Server, Message = "Unable to Upload Image", Severity = Lookups.Severity.Error };
+                    await appLogService.UploadLogEntry(log, await GetApplicationUserId());
+                }                
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                log = new() { FileName = classFileName, Method = "Post", Project = Lookups.Project.Server, Message = $"Error: {ex.Message}", Severity = Lookups.Severity.Info };
+                await appLogService.UploadLogEntry(log, await GetApplicationUserId());                
             }
 
             return this.Problem($"Could not upload to ");
@@ -162,6 +193,27 @@
             }
 
             return this.BadRequest(false);
+        }
+
+        private async Task<string> GetApplicationUserId()
+        {
+            if (this.User.Identity != null)
+            {
+                var userIdentity = (ClaimsIdentity)this.User.Identity;
+                var claims = userIdentity.Claims;
+                var roles = claims.Where(c => c.Type == ClaimTypes.Role).Select(x => x.Value).ToList();
+
+                var id = claims.FirstOrDefault(x => x.Type == "uid");
+
+                if (id != null)
+                {
+                    var user = await this.userManager.FindByIdAsync(id.Value);
+
+                    return id.Value;
+                }
+            }
+
+            return "system";
         }
     }
 }

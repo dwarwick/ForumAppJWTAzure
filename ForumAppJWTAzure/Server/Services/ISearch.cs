@@ -1,5 +1,7 @@
 ﻿
 
+using Nest;
+
 namespace ForumAppJWTAzure.Server.Services
 {
     public interface ISearch

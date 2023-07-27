@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ForumAppJWTAzure.Server.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20230722161736_InitialMigration")]
-    partial class InitialMigration
+    [Migration("20230726022119_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -24,6 +24,42 @@ namespace ForumAppJWTAzure.Server.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+
+            modelBuilder.Entity("ForumAppJWTAzure.Server.Data.AppLog", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CreatedById")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("FileName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Message")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Method")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("ModifiedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Project")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedById");
+
+                    b.ToTable("AppLogs");
+                });
 
             modelBuilder.Entity("ForumAppJWTAzure.Server.Data.ApplicationUser", b =>
                 {
@@ -111,18 +147,18 @@ namespace ForumAppJWTAzure.Server.Migrations
                         {
                             Id = "8e448afa-f008-446e-a52f-13c449803c2e",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "38d403e7-8800-472d-9aa7-75a6ca60348b",
-                            CreatedDate = new DateTime(2023, 7, 22, 16, 17, 36, 267, DateTimeKind.Utc).AddTicks(4061),
+                            ConcurrencyStamp = "109de897-597c-4f10-8d15-f73072db89f0",
+                            CreatedDate = new DateTime(2023, 7, 26, 2, 21, 18, 971, DateTimeKind.Utc).AddTicks(39),
                             DisplayName = "Admin",
                             Email = "admin@bookstore.com",
                             EmailConfirmed = false,
                             LockoutEnabled = false,
-                            ModifiedDate = new DateTime(2023, 7, 22, 16, 17, 36, 208, DateTimeKind.Utc).AddTicks(450),
+                            ModifiedDate = new DateTime(2023, 7, 26, 2, 21, 18, 866, DateTimeKind.Utc).AddTicks(4129),
                             NormalizedEmail = "ADMIN@BOOKSTORE.COM",
                             NormalizedUserName = "ADMIN@BOOKSTORE.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEHZ+5IArqJK5visisTOf29SvLI9wt0CHnJtpauG/Z5+ZbqaVvALxeLtFNfCQ4q62uA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEEaWwykNRfcxfsq1CGMp/XdF8Q7VFnTRptdx52oW2vN9srn3oR3ElpuLb5stuXMK3A==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "1a092eae-090d-4ea2-8cba-2a9b7cffde2e",
+                            SecurityStamp = "425e1974-bed2-4ccc-aa43-8566aa46ba27",
                             Theme = "Dark",
                             TwoFactorEnabled = false,
                             UserName = "admin@bookstore.com"
@@ -131,18 +167,18 @@ namespace ForumAppJWTAzure.Server.Migrations
                         {
                             Id = "30a24107-d279-4e37-96fd-01af5b38cb27",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "6395b5ad-b8bb-4a49-90d7-bda4bcddadb3",
-                            CreatedDate = new DateTime(2023, 7, 22, 16, 17, 36, 327, DateTimeKind.Utc).AddTicks(7174),
+                            ConcurrencyStamp = "d242fa19-6109-4507-820f-8bb75ad2e060",
+                            CreatedDate = new DateTime(2023, 7, 26, 2, 21, 19, 73, DateTimeKind.Utc).AddTicks(6295),
                             DisplayName = "User",
                             Email = "user@bookstore.com",
                             EmailConfirmed = false,
                             LockoutEnabled = false,
-                            ModifiedDate = new DateTime(2023, 7, 22, 16, 17, 36, 267, DateTimeKind.Utc).AddTicks(4357),
+                            ModifiedDate = new DateTime(2023, 7, 26, 2, 21, 18, 971, DateTimeKind.Utc).AddTicks(63),
                             NormalizedEmail = "USER@BOOKSTORE.COM",
                             NormalizedUserName = "USER@BOOKSTORE.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEDFYg21GR7B5GL4cnrLpmp8tjijUHPr0sEQmkFOXtXnk8K9WKbbWc4yKwmUJRkrE5w==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEO4kVy53xYAV3JYeQnLWtU8NqLOxfp4MlyqcYp64Jt83pv3ExhJA4F1Q7TF9t46xdw==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "69883287-6544-4a85-aff7-87330be96229",
+                            SecurityStamp = "2322cca0-15c7-446c-902f-bc2ad0d23393",
                             Theme = "Dark",
                             TwoFactorEnabled = false,
                             UserName = "user@bookstore.com"
@@ -444,6 +480,15 @@ namespace ForumAppJWTAzure.Server.Migrations
                     b.HasKey("UserId", "LoginProvider", "Name");
 
                     b.ToTable("AspNetUserTokens", (string)null);
+                });
+
+            modelBuilder.Entity("ForumAppJWTAzure.Server.Data.AppLog", b =>
+                {
+                    b.HasOne("ForumAppJWTAzure.Server.Data.ApplicationUser", "CreatedBy")
+                        .WithMany()
+                        .HasForeignKey("CreatedById");
+
+                    b.Navigation("CreatedBy");
                 });
 
             modelBuilder.Entity("ForumAppJWTAzure.Server.Data.Forum", b =>

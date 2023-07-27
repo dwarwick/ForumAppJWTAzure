@@ -24,6 +24,7 @@
 @code {
     ApplicationUserViewModel? applicationUserViewModel { get; set; }
     [Parameter] public EventCallback<bool> updatedImage { get; set; }
+    string FileName = "ImageCropper";
 
     private bool ShowCropButton;
     string model { get; set; } = "";
@@ -70,7 +71,16 @@
                 Guid = Guid.NewGuid().ToString()
             };
 
-            //string filename = await _storageService.UploadAsync(data, applicationUserViewModel.Id!, _configuration["BlobStorage:profile-pic-container"]!);
+            AppLogViewModel appLog = new()
+            {
+                FileName = FileName,
+                Method = "UploadServer",
+                Project = Lookups.Project.Client,                    
+                Message = $"Uploading Image {storageModel.Guid}",
+                Severity = Lookups.Severity.Info,
+            };
+
+            var logResponse = await _appLogService.Create<AppLogViewModel>(appLog, ApiEndpoints.AppLog);            
 
             var response = await _storageService.UploadAsync3(storageModel);
 
@@ -78,10 +88,32 @@
             {
                 filename = response?.Data?.Uri ?? "";
                 _snackbar.Add("Successfully uploaded profile picture", Severity.Success);
+
+                appLog = new()
+                {
+                    FileName = FileName,
+                    Method = "UploadServer",
+                    Project = Lookups.Project.Client,
+                    Message = $"Successfully uploaded Image {storageModel.Guid}",
+                        Severity = Lookups.Severity.Info,
+                };
+
+                logResponse = await _appLogService.Create<AppLogViewModel>(appLog, ApiEndpoints.AppLog);
             }
             else
             {
                 _snackbar.Add("Problem uploading profile picture", Severity.Error);
+
+                appLog = new()
+                {
+                    FileName = FileName,
+                    Method = "UploadServer",
+                    Project = Lookups.Project.Client,
+                    Message = $"Problem uploading Image {storageModel.Guid}",
+                    Severity = Lookups.Severity.Error,
+                };
+
+                logResponse = await _appLogService.Create<AppLogViewModel>(appLog, ApiEndpoints.AppLog);
             }
 
             if (!string.IsNullOrEmpty(filename))

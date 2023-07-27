@@ -10,6 +10,6 @@
 
         public DateTime? CreatedDate { get; set; }
 
-        public DateTime? ModifiedDate { get; set; } = DateTime.UtcNow;
+        public DateTime? ModifiedDate { get; set; }
     }
 }

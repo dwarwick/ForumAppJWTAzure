@@ -22,7 +22,6 @@ global using Azure.Core.Extensions;
 global using Azure.Storage.Queues;
 global using ForumAppJWTAzure.Server;
 global using ForumAppJWTAzure.Server.Configurations;
-global using Nest;
 global using ForumAppJWTAzure.Server.Services;
 global using Microsoft.AspNetCore.SignalR;
 global using ForumAppJWTAzure.Server.Hubs;

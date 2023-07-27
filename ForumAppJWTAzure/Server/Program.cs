@@ -70,6 +70,7 @@ builder.Services.AddResponseCompression(opts =>
 });
 
 builder.Services.AddSingleton<ISearch, Search>();
+builder.Services.AddScoped<IApplogService, AppLogService>();
 
 var app = builder.Build();
 

@@ -72,11 +72,8 @@
             _snackbar.Add($"A Tag named {tag.Name} already exists. Tag not added", Severity.Error);
             return;
         }
-
-        DateTime createdDate = DateTime.UtcNow;
-        tag.CreatedById = applicationUserViewModel?.Id;
-        tag.CreatedDate = createdDate;
-        tag.ModifiedDate = createdDate;
+        
+        tag.CreatedById = applicationUserViewModel?.Id;        
 
         Response<TagViewModel> response = await _tagService.Create<TagViewModel>(tag, ApiEndpoints.CreateNewTag);
 

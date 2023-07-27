@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace ForumAppJWTAzure.Server.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialMigration : Migration
+    public partial class Initial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -76,6 +76,30 @@ namespace ForumAppJWTAzure.Server.Migrations
                         principalTable: "AspNetRoles",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "AppLogs",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Project = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    FileName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Method = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Message = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedById = table.Column<string>(type: "nvarchar(450)", nullable: true),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ModifiedDate = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AppLogs", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_AppLogs_AspNetUsers_CreatedById",
+                        column: x => x.CreatedById,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -304,8 +328,8 @@ namespace ForumAppJWTAzure.Server.Migrations
                 columns: new[] { "Id", "AccessFailedCount", "ConcurrencyStamp", "CreatedDate", "DisplayName", "Email", "EmailConfirmed", "LockoutEnabled", "LockoutEnd", "ModifiedDate", "NormalizedEmail", "NormalizedUserName", "PasswordHash", "PhoneNumber", "PhoneNumberConfirmed", "ProfilePicture", "SecurityStamp", "Theme", "TwoFactorEnabled", "UserName" },
                 values: new object[,]
                 {
-                    { "30a24107-d279-4e37-96fd-01af5b38cb27", 0, "6395b5ad-b8bb-4a49-90d7-bda4bcddadb3", new DateTime(2023, 7, 22, 16, 17, 36, 327, DateTimeKind.Utc).AddTicks(7174), "User", "user@bookstore.com", false, false, null, new DateTime(2023, 7, 22, 16, 17, 36, 267, DateTimeKind.Utc).AddTicks(4357), "USER@BOOKSTORE.COM", "USER@BOOKSTORE.COM", "AQAAAAIAAYagAAAAEDFYg21GR7B5GL4cnrLpmp8tjijUHPr0sEQmkFOXtXnk8K9WKbbWc4yKwmUJRkrE5w==", null, false, null, "69883287-6544-4a85-aff7-87330be96229", "Dark", false, "user@bookstore.com" },
-                    { "8e448afa-f008-446e-a52f-13c449803c2e", 0, "38d403e7-8800-472d-9aa7-75a6ca60348b", new DateTime(2023, 7, 22, 16, 17, 36, 267, DateTimeKind.Utc).AddTicks(4061), "Admin", "admin@bookstore.com", false, false, null, new DateTime(2023, 7, 22, 16, 17, 36, 208, DateTimeKind.Utc).AddTicks(450), "ADMIN@BOOKSTORE.COM", "ADMIN@BOOKSTORE.COM", "AQAAAAIAAYagAAAAEHZ+5IArqJK5visisTOf29SvLI9wt0CHnJtpauG/Z5+ZbqaVvALxeLtFNfCQ4q62uA==", null, false, null, "1a092eae-090d-4ea2-8cba-2a9b7cffde2e", "Dark", false, "admin@bookstore.com" }
+                    { "30a24107-d279-4e37-96fd-01af5b38cb27", 0, "d242fa19-6109-4507-820f-8bb75ad2e060", new DateTime(2023, 7, 26, 2, 21, 19, 73, DateTimeKind.Utc).AddTicks(6295), "User", "user@bookstore.com", false, false, null, new DateTime(2023, 7, 26, 2, 21, 18, 971, DateTimeKind.Utc).AddTicks(63), "USER@BOOKSTORE.COM", "USER@BOOKSTORE.COM", "AQAAAAIAAYagAAAAEO4kVy53xYAV3JYeQnLWtU8NqLOxfp4MlyqcYp64Jt83pv3ExhJA4F1Q7TF9t46xdw==", null, false, null, "2322cca0-15c7-446c-902f-bc2ad0d23393", "Dark", false, "user@bookstore.com" },
+                    { "8e448afa-f008-446e-a52f-13c449803c2e", 0, "109de897-597c-4f10-8d15-f73072db89f0", new DateTime(2023, 7, 26, 2, 21, 18, 971, DateTimeKind.Utc).AddTicks(39), "Admin", "admin@bookstore.com", false, false, null, new DateTime(2023, 7, 26, 2, 21, 18, 866, DateTimeKind.Utc).AddTicks(4129), "ADMIN@BOOKSTORE.COM", "ADMIN@BOOKSTORE.COM", "AQAAAAIAAYagAAAAEEaWwykNRfcxfsq1CGMp/XdF8Q7VFnTRptdx52oW2vN9srn3oR3ElpuLb5stuXMK3A==", null, false, null, "425e1974-bed2-4ccc-aa43-8566aa46ba27", "Dark", false, "admin@bookstore.com" }
                 });
 
             migrationBuilder.InsertData(
@@ -316,6 +340,11 @@ namespace ForumAppJWTAzure.Server.Migrations
                     { "8343074e-8623-4e1a-b0c1-84fb8678c8f3", "30a24107-d279-4e37-96fd-01af5b38cb27" },
                     { "c7ac6cfe-1f10-4baf-b604-cde350db9554", "8e448afa-f008-446e-a52f-13c449803c2e" }
                 });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AppLogs_CreatedById",
+                table: "AppLogs",
+                column: "CreatedById");
 
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",
@@ -400,6 +429,9 @@ namespace ForumAppJWTAzure.Server.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "AppLogs");
+
             migrationBuilder.DropTable(
                 name: "AspNetRoleClaims");
 

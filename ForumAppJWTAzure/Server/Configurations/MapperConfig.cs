@@ -22,6 +22,8 @@
                 .ForMember(x => x.Id, options => options.Ignore());
 
             this.CreateMap<VoteViewModel, Vote>().ReverseMap();
+
+            this.CreateMap<AppLogViewModel, AppLog>().ReverseMap();
         }
     }
 }

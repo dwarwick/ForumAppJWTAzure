@@ -21,6 +21,8 @@
 
         public virtual DbSet<Vote> Votes { get; set; }
 
+        public virtual DbSet<AppLog> AppLogs { get; set; }
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
@@ -50,8 +52,7 @@
                     UserName = "admin@bookstore.com",
                     NormalizedUserName = "ADMIN@BOOKSTORE.COM",
                     DisplayName = "Admin",
-                    PasswordHash = hasher.HashPassword(null, "P@ssword1"),
-                    CreatedDate = DateTime.UtcNow,
+                    PasswordHash = hasher.HashPassword(null, "P@ssword1"),                    
                 },
                 new ApplicationUser
                 {
@@ -61,8 +62,7 @@
                     UserName = "user@bookstore.com",
                     NormalizedUserName = "USER@BOOKSTORE.COM",
                     DisplayName = "User",
-                    PasswordHash = hasher.HashPassword(null, "P@ssword1"),
-                    CreatedDate = DateTime.UtcNow,
+                    PasswordHash = hasher.HashPassword(null, "P@ssword1"),                    
                 });
 
             builder.Entity<IdentityUserRole<string>>().HasData(
@@ -89,5 +89,28 @@
         }
 
         partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
+
+        public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            DateTime createdDate = DateTime.UtcNow;
+
+            var entries = ChangeTracker
+                .Entries()
+                .Where(e => e.Entity is BaseModel && (
+                        e.State == EntityState.Added
+                        || e.State == EntityState.Modified));
+
+            foreach (var entityEntry in entries)
+            {
+                ((BaseModel)entityEntry.Entity).ModifiedDate = createdDate;
+
+                if (entityEntry.State == EntityState.Added)
+                {
+                    ((BaseModel)entityEntry.Entity).CreatedDate = createdDate;
+                }
+            }
+
+            return await base.SaveChangesAsync();
+        }
     }
 }

@@ -1,4 +1,5 @@
-﻿using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
+﻿using Nest;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace ForumAppJWTAzure.Server.Services
 {

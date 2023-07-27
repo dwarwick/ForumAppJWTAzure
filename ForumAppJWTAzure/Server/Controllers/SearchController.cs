@@ -1,4 +1,6 @@
-﻿namespace ForumAppJWTAzure.Server.Controllers
+﻿using Nest;
+
+namespace ForumAppJWTAzure.Server.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]

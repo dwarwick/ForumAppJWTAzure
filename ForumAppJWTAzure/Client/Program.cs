@@ -22,6 +22,7 @@ builder.Services.AddScoped<IPostService, PostService>();
 builder.Services.AddScoped<ITagService, TagService>();
 builder.Services.AddScoped<IVoteService, VoteService>();
 builder.Services.AddScoped<ISearchService, SearchService>();
+builder.Services.AddScoped<IAppLogService, AppLogService>();
 builder.Services.AddScoped<StorageService>();
 
 builder.Services.AddMudServices(config =>

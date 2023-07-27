@@ -37,7 +37,7 @@ namespace ForumAppJWTAzure.Server.Controllers
         [Route("uploadprofilepic")]
         public async Task<ActionResult<StorageViewModel>> Post(StorageViewModel model)
         {
-            AppLog log = new() { FileName = classFileName, Method = "Post", Project = Lookups.Project.Server, Message = $"Uploading {model.Guid}", Severity = Lookups.Severity.Info };
+            AppLog log = new() { FileName = classFileName, Method = "Post", Project = Lookups.Project.Server, Message = $"Uploading {model.Guid}: {JsonConvert.SerializeObject(model)}", Severity = Lookups.Severity.Info };
             await appLogService.UploadLogEntry(log, await GetApplicationUserId());
             Console.WriteLine($"{JsonConvert.SerializeObject(model)}");
             StorageViewModel viewModel = new StorageViewModel();

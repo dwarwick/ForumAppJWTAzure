@@ -33,6 +33,8 @@
 @code{
     protected override async Task OnInitializedAsync()
     {
-      //  await _signalRService.StartConnection();
+        await _configurationService.GetSettings();
+        await _signalRService.StartConnection();
+        //  await _signalRService.StartConnection();
     }
 }

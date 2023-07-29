@@ -66,9 +66,9 @@
             string filename = "";
             StorageViewModel storageModel = new()
             {
-                Base64 = data,
-                ContainerName = _configuration["BlobStorage:profile-pic-container"]!,
-                Guid = Guid.NewGuid().ToString()
+                    Base64 = data,                    
+                    ContainerName = _configurationService.Configuration["BlobStorage:profile-pic-container"],
+                    Guid = Guid.NewGuid().ToString()
             };
 
             AppLogViewModel appLog = new()

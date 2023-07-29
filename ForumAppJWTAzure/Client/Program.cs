@@ -16,7 +16,7 @@ builder.Services.AddScoped<AuthenticationStateProvider>(p => p.GetRequiredServic
 builder.Services.AddAuthorizationCore();
 
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
-builder.Services.AddSingleton<ISignalRService, SignalRService>();
+builder.Services.AddScoped<ISignalRService, SignalRService>();
 builder.Services.AddScoped<IForumService, ForumService>();
 builder.Services.AddScoped<IPostService, PostService>();
 builder.Services.AddScoped<ITagService, TagService>();
@@ -24,6 +24,7 @@ builder.Services.AddScoped<IVoteService, VoteService>();
 builder.Services.AddScoped<ISearchService, SearchService>();
 builder.Services.AddScoped<IAppLogService, AppLogService>();
 builder.Services.AddScoped<StorageService>();
+builder.Services.AddScoped<IConfigurationService, ConfigurationService>();
 
 builder.Services.AddMudServices(config =>
 {

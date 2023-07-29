@@ -1,4 +1,6 @@
-﻿namespace ForumAppJWTAzure.Server.Controllers
+﻿using System.Diagnostics;
+
+namespace ForumAppJWTAzure.Server.Controllers
 {
     [Route("api/[controller]")]
     public class AuthController : ControllerBase
@@ -258,7 +260,7 @@
 
             string tokenString = new JwtSecurityTokenHandler().WriteToken(token);
 #if DEBUG
-            Console.WriteLine($"token: {tokenString}");
+            Debug.WriteLine($"token: {tokenString}");
 
 #endif
             return tokenString;

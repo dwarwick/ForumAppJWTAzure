@@ -164,6 +164,8 @@
             var requestContent = new StringContent(user, Encoding.UTF8, "application/json");
             var responseMessage = await this.httpClient.PostAsync(ApiEndpoints.Register, requestContent);
 
+            await this.localStorage.RemoveItemAsync("accessToken");
+
             return responseMessage;
         }
 
@@ -198,6 +200,10 @@
                     this.ApplicationUserViewModel = response.Data;
 
                     return response!;
+                }
+                else
+                {
+                    await Logout();
                 }
             }
             catch (ApiException exception)

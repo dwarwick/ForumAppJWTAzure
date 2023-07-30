@@ -2,7 +2,7 @@
 <MudCard>
     <MudCardHeader><h3>Register New Account</h3></MudCardHeader>
     <MudCardContent>
-        <EditForm Model="RegistrationModel" OnSubmit="HandleRegistration">
+        <EditForm Model="RegistrationModel" OnValidSubmit="HandleRegistration">
             <FluentValidationValidator @ref="Validator" Options="@(options => options.IncludeAllRuleSets())" />
             <ValidationSummary />
             <MudTextField @bind-Value="RegistrationModel.Email" For="@(() => RegistrationModel.Email)" Immediate="true" Label="Email Address" />

@@ -38,7 +38,7 @@ namespace ForumAppJWTAzure.Server.Controllers
         [Route("GetCurrentUser")]
         public async Task<ActionResult<ApplicationUserViewModel>> GetCurrentUser()
         {
-            ApplicationUserViewModel applicationUser = new();
+            ApplicationUserViewModel? applicationUser = new();
             this.logger.LogInformation("Getting Current User");
             try
             {
@@ -55,7 +55,15 @@ namespace ForumAppJWTAzure.Server.Controllers
                         var user = await this.userManager.FindByIdAsync(id.Value);
 
                         applicationUser = this.mapper.Map<ApplicationUserViewModel>(user);
-                        applicationUser.Roles = roles;
+
+                        if(applicationUser != null)
+                        {
+                            applicationUser.Roles = roles;
+                        }
+                        else
+                        {
+                            return Problem(null);
+                        }
                     }
                 }
 

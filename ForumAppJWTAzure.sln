@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.6.33829.357
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ForumAppJWTAzure.Server", "ForumAppJWTAzure\Server\ForumAppJWTAzure.Server.csproj", "{009F5CA4-8E57-4841-8A68-7E4E3B5347F1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ForumAppJWTAzure.Server", "ForumAppJWTAzure\Server\ForumAppJWTAzure.Server.csproj", "{009F5CA4-8E57-4841-8A68-7E4E3B5347F1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ForumAppJWTAzure.Client", "ForumAppJWTAzure\Client\ForumAppJWTAzure.Client.csproj", "{15B564F0-52D4-4310-B0E8-B00F6C5F6E33}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ForumAppJWTAzure.Client", "ForumAppJWTAzure\Client\ForumAppJWTAzure.Client.csproj", "{15B564F0-52D4-4310-B0E8-B00F6C5F6E33}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ForumAppJWTAzure.Shared", "ForumAppJWTAzure\Shared\ForumAppJWTAzure.Shared.csproj", "{5CB39C07-0E1C-4408-9782-0FFC8D782C70}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ForumAppJWTAzure.Shared", "ForumAppJWTAzure\Shared\ForumAppJWTAzure.Shared.csproj", "{5CB39C07-0E1C-4408-9782-0FFC8D782C70}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

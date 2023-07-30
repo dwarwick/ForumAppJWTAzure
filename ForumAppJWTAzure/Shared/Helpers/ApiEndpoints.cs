@@ -8,6 +8,7 @@
         public const string GetLoggedInUser = "api/auth/GetCurrentUser";
         public const string UpdateLoggedInUser = "api/auth/updateloggedinuser";
         public const string UpdatePassword = "api/auth/updatepassword";
+        public static string ConfirmEmail(string url, string token, string email) => $"{url}/api/auth/confirmemail/?token={token}&email={email}";
 
         public const string CreateNewForum = "api/forum/createnewforum";
         public const string CreateNewPost = "api/post/createnewpost";

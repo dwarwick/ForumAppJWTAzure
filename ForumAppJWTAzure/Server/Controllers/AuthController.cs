@@ -1,21 +1,36 @@
-﻿using System.Diagnostics;
+﻿using Elasticsearch.Net;
+using ForumAppJWTAzure.Shared.Helpers;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.WebUtilities;
+using Newtonsoft.Json;
+using System.Diagnostics;
 
 namespace ForumAppJWTAzure.Server.Controllers
 {
     [Route("api/[controller]")]
-    public class AuthController : ControllerBase
+    public class AuthController : SupplementalController
     {
         private readonly ILogger<AuthController> logger;
         private readonly IMapper mapper;
         private readonly UserManager<ApplicationUser> userManager;
         private readonly IConfiguration configuration;
+        private readonly IEmailService emailService;
+        private readonly IApplogService appLogService;
+        private string classFileName = "AuthController";
 
-        public AuthController(ILogger<AuthController> logger, IMapper mapper, UserManager<ApplicationUser> userManager, IConfiguration configuration)
+        public AuthController(ILogger<AuthController> logger, 
+            IMapper mapper, 
+            UserManager<ApplicationUser> userManager, 
+            IConfiguration configuration, 
+            IEmailService emailService,
+            IApplogService applogService) : base(userManager)
         {
             this.logger = logger;
             this.mapper = mapper;
             this.userManager = userManager;
             this.configuration = configuration;
+            this.emailService = emailService;
+            this.appLogService = applogService;
         }
 
         [HttpGet]
@@ -81,12 +96,61 @@ namespace ForumAppJWTAzure.Server.Controllers
                 }
 
                 await this.userManager.AddToRoleAsync(user, "User");
+
+                string emailToken = await userManager.GenerateEmailConfirmationTokenAsync(user);
+
+                byte[] tokenGeneratedBytes = Encoding.UTF8.GetBytes(emailToken);
+                var codeEncoded = WebEncoders.Base64UrlEncode(tokenGeneratedBytes);
+
+                await emailService.SendEmailVerificationMessageAsync(user, codeEncoded);
+
                 return this.Accepted();
             }
             catch (Exception ex)
             {
                 this.logger.LogError(ex, $"Something Went Wrong in the {nameof(this.Register)}");
                 return this.Problem($"Something Went Wrong in the {nameof(this.Register)}", statusCode: 500);
+            }
+        }
+
+        [HttpGet]
+        [AllowAnonymous]
+        [Route("confirmemail")]
+        public async Task<ActionResult<ApplicationUserViewModel>> ConfirmEmail([FromQuery]string token,[FromQuery] string email)
+        {
+            try
+            {
+
+                var user = await userManager.FindByEmailAsync(email);
+
+                if (string.IsNullOrEmpty(token) || string.IsNullOrEmpty(email) || user == null)
+                {
+                    AppLog log = new() { FileName = classFileName, Method = "ConfirmEmail", Project = Lookups.Project.Server, Message = $"Email verification url invalid: {email}", Severity = Lookups.Severity.Error };
+                    await appLogService.UploadLogEntry(log, await GetApplicationUserId());
+
+                    return BadRequest("Email verification url invalid.");
+                }
+
+                var codeDecodedBytes = WebEncoders.Base64UrlDecode(token);
+                var codeDecoded = Encoding.UTF8.GetString(codeDecodedBytes);
+
+                var result = await userManager.ConfirmEmailAsync(user, codeDecoded);
+
+                if(result.Succeeded)
+                {
+                    return LocalRedirect("/users/emailconfirmed");
+                }
+                else
+                {
+                    return LocalRedirect("/EmailNotConfirmed");
+                }
+                
+               
+            }
+            catch (Exception ex)
+            {
+                this.logger.LogError(ex, $"Something Went Wrong in the {nameof(this.ConfirmEmail)}");
+                return this.Problem($"Something Went Wrong in the {nameof(this.ConfirmEmail)}", statusCode: 500);
             }
         }
 

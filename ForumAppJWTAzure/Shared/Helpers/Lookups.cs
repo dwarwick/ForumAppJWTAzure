@@ -27,5 +27,10 @@
             public const string Error = "Error";
             public const string Critical = "Critical";
         }
+
+        public static class EmailTag
+        {
+            public const string EmailVerification = "Email Verification";
+        }
     }
 }

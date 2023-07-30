@@ -1,13 +1,28 @@
 
 
+using ForumAppJWTAzure.Server.Providers;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 var connString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connString));
+
+builder.Services.Configure<IdentityOptions>(opts =>
+{
+    opts.SignIn.RequireConfirmedEmail = true;
+    opts.Tokens.EmailConfirmationTokenProvider = "emailconfirmation";
+});
+
 builder.Services.AddIdentityCore<ApplicationUser>()
     .AddRoles<IdentityRole>()
-    .AddEntityFrameworkStores<ApplicationDbContext>();
+    .AddEntityFrameworkStores<ApplicationDbContext>()
+    .AddTokenProvider<EmailConfirmationTokenProvider<ApplicationUser>>("emailconfirmation");
+
+builder.Services.Configure<DataProtectionTokenProviderOptions>(opt =>
+     opt.TokenLifespan = TimeSpan.FromHours(2));
+builder.Services.Configure<EmailConfirmationTokenProviderOptions>(opt =>
+    opt.TokenLifespan = TimeSpan.FromDays(1));
 
 builder.Services.AddAutoMapper(typeof(MapperConfig));
 
@@ -71,6 +86,7 @@ builder.Services.AddResponseCompression(opts =>
 
 builder.Services.AddSingleton<ISearch, Search>();
 builder.Services.AddScoped<IApplogService, AppLogService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
 
 var app = builder.Build();
 

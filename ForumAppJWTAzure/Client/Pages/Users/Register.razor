@@ -34,7 +34,7 @@
 
             if (response.IsSuccessStatusCode)
             {
-                NavigateToLogin();
+                NavigateToEmailSent();
             }
             else
             {
@@ -45,14 +45,14 @@
         {
             if (ex.StatusCode >= 200 && ex.StatusCode <= 299)
             {
-                NavigateToLogin();
+                NavigateToEmailSent();
             }
         }
     }
 
 
-    private void NavigateToLogin()
+    private void NavigateToEmailSent()
     {
-        _navManager.NavigateTo("/users/login");
+        _navManager.NavigateTo("/users/emailsent");
     }
 }

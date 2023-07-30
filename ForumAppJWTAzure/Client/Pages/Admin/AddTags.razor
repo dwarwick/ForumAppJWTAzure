@@ -1,4 +1,5 @@
 ﻿@page "/admin/createtag"
+@attribute [Authorize(Roles = "Administrator")]
 @if (pageLoaded && applicationUserViewModel != null && tag != null && allTags != null)
 {
     <MudCard Elevation="5">
@@ -10,7 +11,7 @@
             <ValidationSummary />
             <MudCardContent Class="py-0">
 
-                <MudTextField InputType="InputType.Text" Label="Tag Name" @bind-Value="tag.Name" For="@(() => tag.Name)" Mask="@(new RegexMask("^[A-Za-z0-9-]+$"))" />
+                <MudTextField InputType="InputType.Text" Label="Tag Name" @bind-Value="tag.Name" For="@(() => tag.Name)" Mask="@(new RegexMask("^[A-Za-z0-9-#]+$"))" />
 
                 <MudCardActions>
                     <MudButton ButtonType="ButtonType.Submit">Save</MudButton>

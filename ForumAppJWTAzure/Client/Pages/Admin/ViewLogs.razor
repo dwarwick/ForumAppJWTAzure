@@ -1,0 +1,45 @@
+﻿@page "/admin/viewlogs"
+@attribute [Authorize(Roles = "Administrator")]
+
+@if(logs != null)
+{
+    <MudDataGrid @ref="_grid" T="AppLogViewModel" MultiSelection="true" Items="@logs" SortMode="SortMode.Multiple" Filterable="true" FilterCaseSensitivity="DataGridFilterCaseSensitivity.CaseInsensitive">
+             
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">App Logs</MudText>
+        <MudSpacer />
+    </ToolBarContent>
+    <Columns>        
+        <PropertyColumn Property="x => x.Project" />
+        <PropertyColumn Property="x => x.FileName" />
+        <PropertyColumn Property="x => x.Method"  />
+        <PropertyColumn Property="x => x.Message" />
+        <PropertyColumn Property="x => x.CreatedBy.UserName" Title="User" />
+        <PropertyColumn Property="x => x.CreatedDate" Title="Created Date" />
+        <PropertyColumn Property="x => x.Severity" />
+    </Columns>
+        <PagerContent>            
+                
+                <MudDataGridPager PageSizeOptions="Lookups.MudPagination.PageSizeOptions" InfoFormat="@($"{Lookups.MudPagination.InfoFormat}")" />
+            
+        </PagerContent>
+</MudDataGrid>
+}
+
+@code {
+    List<AppLogViewModel>? logs;
+
+    private MudDataGrid<AppLogViewModel>? _grid;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Response<List<AppLogViewModel>> response = await _appLogService.GetAll<AppLogViewModel>(ApiEndpoints.AppLog);
+
+        if (response.Success)
+        {
+            logs = response.Data ?? new List<AppLogViewModel>();
+        }
+    }
+
+   
+}

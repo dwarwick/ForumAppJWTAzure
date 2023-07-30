@@ -22,19 +22,19 @@ namespace ForumAppJWTAzure.Server.Controllers
 
         // GET: api/Forum
         [HttpGet]
-        [AllowAnonymous]
-        public async Task<ActionResult<List<AppLogViewModel>>> GetForums()
+        [Authorize(Roles = "Administrator")]
+        public async Task<ActionResult<List<AppLogViewModel>>> Get()
         {
             List<AppLog>? logs = null;
 
-            if (this.context.Forums == null)
+            if (this.context.AppLogs == null)
             {
                 return this.NotFound();
             }
 
             try
             {
-                logs = await this.context.AppLogs.OrderByDescending(x => x.CreatedDate).ToListAsync();
+                logs = await this.context.AppLogs.OrderByDescending(x => x.CreatedDate).Include(x => x.CreatedBy).ToListAsync();
             }
             catch (Exception ex)
             {

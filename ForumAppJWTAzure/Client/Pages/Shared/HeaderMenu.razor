@@ -9,7 +9,16 @@
 
                 @if(isAdmin)
                 {
-                    <MudLink Href="admin/createtag">Add Tags<MudIcon Icon="@Icons.Material.Filled.ViewList" Class="ms-1 me-3" /></MudLink>
+                    <MudMenu>
+                        <ActivatorContent>
+                            <MudText Color="Color.Primary">Admin Menu</MudText><MudIcon Icon="@Icons.Material.Filled.AdminPanelSettings" Color="Color.Primary"/>
+                        </ActivatorContent>
+                        <ChildContent>
+                            <MudMenuItem><MudLink Href="admin/createtag">Add Tags<MudIcon Icon="@Icons.Material.Filled.Tag" Class="ms-1 me-3" /></MudLink></MudMenuItem>
+                            <MudMenuItem><MudLink Href="admin/viewlogs">View Logs<MudIcon Icon="@Icons.Material.Filled.BugReport" Class="ms-1 me-3" /></MudLink></MudMenuItem>
+                            <MudMenuItem>Armory</MudMenuItem>
+                        </ChildContent>                        
+                    </MudMenu>
                 }
             </Authorized>
 

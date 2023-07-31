@@ -8,8 +8,8 @@ tinyMceConf =
     link_assume_external_targets: 'https',
     link_context_toolbar: true,
     link_default_protocol: 'https',
-    automatic_uploads: true,
-    images_upload_url: 'https://localhost:7246/api/storage/uploadpostpic',
+    automatic_uploads: true,    
+    images_upload_url: `${window.location.protocol}//${window.location.host}/api/storage/uploadpostpic`,
     image_dimensions: false,
     image_caption: true,
     image_description: false,
@@ -28,3 +28,4 @@ editorConf =
     autoresize_overflow_padding: 5,
     autoresize_bottom_margin: 5
 };
+

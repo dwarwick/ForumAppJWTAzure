@@ -16,6 +16,7 @@ namespace ForumAppJWTAzure.Server.Controllers
 
         [HttpGet]
         [Route("doesfileexist")]
+        [Authorize]
         public async Task<bool> DoesFileExist([FromQuery(Name = "path")] string path) => await Task.FromResult(System.IO.File.Exists(path));
 
         [HttpGet]
@@ -28,6 +29,7 @@ namespace ForumAppJWTAzure.Server.Controllers
         }
 
         [HttpPost]
+        [Authorize]
         public ActionResult PostFile([FromBody] string model)
         {
             try

@@ -3,14 +3,21 @@
 
 @if(logs != null)
 {
-    <MudDataGrid @ref="_grid" T="AppLogViewModel" MultiSelection="true" Items="@logs" SortMode="SortMode.Multiple" Filterable="true" FilterCaseSensitivity="DataGridFilterCaseSensitivity.CaseInsensitive">
+    <MudDataGrid @ref="_grid" 
+        T="AppLogViewModel" 
+        Items="@logs" 
+        SortMode="SortMode.Multiple" 
+        Filterable="true" 
+        FilterCaseSensitivity="DataGridFilterCaseSensitivity.CaseInsensitive"
+        ColumnResizeMode="ResizeMode.Container"
+        Hideable="true">
              
     <ToolBarContent>
         <MudText Typo="Typo.h6">App Logs</MudText>
         <MudSpacer />
     </ToolBarContent>
     <Columns>        
-        <PropertyColumn Property="x => x.Project" />
+        <PropertyColumn Property="x => x.Project"  />
         <PropertyColumn Property="x => x.FileName" />
         <PropertyColumn Property="x => x.Method"  />
         <PropertyColumn Property="x => x.Message" />

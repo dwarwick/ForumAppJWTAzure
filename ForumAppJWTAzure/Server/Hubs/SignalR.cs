@@ -1,5 +1,7 @@
 ﻿
 
+using ForumAppJWTAzure.Server.Data;
+
 namespace ForumAppJWTAzure.Server.Hubs
 {
     public class SignalR : Hub
@@ -20,6 +22,11 @@ namespace ForumAppJWTAzure.Server.Hubs
         public async Task AddPostViewModel(string postViewModel, int postId)
         {
             await this.Clients.Groups($"post{postId}").SendAsync("AddPostViewModel", postViewModel);
+        }
+
+        public async Task EditPostViewModel(string postViewModel, int postId)
+        {
+            await this.Clients.Groups($"EditPost{postId}").SendAsync("EditPostViewModel", postViewModel);
         }
 
         public async Task AddPostVoteViewModel(string postVoteViewModel, int postId)

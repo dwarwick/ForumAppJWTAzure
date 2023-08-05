@@ -8,12 +8,14 @@ namespace ForumAppJWTAzure.Client.Services
         private readonly HttpClient client;
 
         private readonly ISignalRService? hubConnection;
+        private readonly IAuthenticationService authenticationService;
 
-        public PostService(HttpClient client, ILocalStorageService localStorage, ISignalRService hubConnection)
+        public PostService(HttpClient client, ILocalStorageService localStorage, ISignalRService hubConnection, IAuthenticationService authenticationService)
             : base(client, localStorage)
         {
             this.client = client;
             this.hubConnection = hubConnection;
+            this.authenticationService = authenticationService;
         }
 
         public async Task<Response<PostViewModel>> CreateNewPost(PostViewModel model)
@@ -99,7 +101,7 @@ namespace ForumAppJWTAzure.Client.Services
 
                         if (response.Data?.ForumId != null && this.hubConnection != null && this.hubConnection.HubConnection != null)
                         {
-                            await this.hubConnection.HubConnection.SendAsync("AddPostViewModel", serializedPost ?? string.Empty, response.Data.ForumId ?? 0);
+                            await this.hubConnection.HubConnection.SendAsync("EditPostViewModel", serializedPost ?? string.Empty, response.Data.ForumId ?? 0);
                         }
                     }
 

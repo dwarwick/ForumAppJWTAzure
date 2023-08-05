@@ -6,6 +6,8 @@ namespace ForumAppJWTAzure.Client.Services
     {
         event EventHandler<string>? AddPostViewModel;
 
+        event EventHandler<string>? EditPostViewModel;
+
         event EventHandler<string>? AddPostVoteViewModel;
 
         HubConnection? HubConnection { get; set; }

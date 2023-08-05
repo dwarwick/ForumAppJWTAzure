@@ -18,6 +18,8 @@ namespace ForumAppJWTAzure.Client.Services
 
         public event EventHandler<string>? AddPostViewModel;
 
+        public event EventHandler<string>? EditPostViewModel;
+
         public event EventHandler<string>? AddPostVoteViewModel;
 
         public HubConnection? HubConnection { get; set; }
@@ -84,6 +86,14 @@ namespace ForumAppJWTAzure.Client.Services
                 if (postViewModel != null && this.AddPostViewModel != null)
                 {
                     this.AddPostViewModel.Invoke(this, postViewModel);
+                }
+            });
+
+            this.HubConnection?.On<string>("EditPostViewModel", (postViewModel) =>
+            {
+                if (postViewModel != null && this.EditPostViewModel != null)
+                {
+                    this.EditPostViewModel.Invoke(this, postViewModel);
                 }
             });
 

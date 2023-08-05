@@ -57,8 +57,10 @@
         { // read only
 
             <HTMLRenderer postText="@postText" />
-
-            <MudPaper Elevation="5">
+                        
+            @if(Images.Count > 0)
+            {
+                <MudPaper Elevation="5">
                 <MudStack Row="true" Spacing="5" Class="p-3">
                     @foreach (LocationViewModel image in Images)
                     {
@@ -69,6 +71,7 @@
                     }
                 </MudStack>
             </MudPaper>
+            }            
 
             @if ((applicationUserViewModel != null && post?.CreatedBy != null) && (post.CreatedBy.Id == applicationUserViewModel.Id))
             {
@@ -115,8 +118,7 @@
 {
     <DragableWindow Description="@viewedImage.Description">
         <MudStack @onclick="() => ToggleOpen(viewedImage)">
-            <MudImage Alt="@viewedImage.Description" Src="@viewedImage.Location" ObjectFit="ObjectFit.Fill" Fluid="true" Style="max-width:80vw;max-height:80vh;" />
-            @*<MudText >@viewedImage.Description</MudText>*@
+            <MudImage Alt="@viewedImage.Description" Src="@viewedImage.Location" ObjectFit="ObjectFit.Fill" Fluid="true" Style="max-width:80vw;max-height:80vh;" />            
         </MudStack>
     </DragableWindow>
 }
@@ -162,6 +164,16 @@
             ReplyPostNumber = PostIndexFunc(post?.ReplyPost?.Id ?? 0);
         }
 
+        if (_signalRService?.HubConnection?.State == HubConnectionState.Connected)
+        {
+            _signalRService.EditPostViewModel += (s, e) => EditPostViewModel(s, e);
+
+            if (_signalRService.HubConnection != null && post.Id > 0)
+            {
+                await _signalRService.HubConnection.SendAsync("AddToGroup", $"EditPost{post.Id}");
+            }
+        }
+
         StateHasChanged();
     }
 
@@ -176,6 +188,17 @@
                 ReadOnlyEditor.AdditionalAttributes = new Dictionary<string, object>() { { "readonly", true } };
             }
         }
+    }
+
+    private void EditPostViewModel(object? sender, string viewModel)
+    {
+        if (viewModel == null || post?.CreatedById == applicationUserViewModel?.Id) return;
+
+        post = JsonConvert.DeserializeObject<PostViewModel>(viewModel); 
+        
+        postText = post?.Text ?? "";
+
+        StateHasChanged();
     }
 
     protected override void OnParametersSet()
@@ -282,6 +305,18 @@
     {
         viewedImage = image;
         ViewingImages = !ViewingImages;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if ((_signalRService?.HubConnection?.State ?? HubConnectionState.Disconnected) == HubConnectionState.Connected && post.Id > 0)
+        {
+            if (_signalRService != null && _signalRService.HubConnection != null && post.Id > 0)
+            {
+                await _signalRService.HubConnection.SendAsync("RemoveFromGroup", $"EditPost{post.Id}");
+                _signalRService.EditPostViewModel -= EditPostViewModel;
+            }
+        }
     }
 }
 

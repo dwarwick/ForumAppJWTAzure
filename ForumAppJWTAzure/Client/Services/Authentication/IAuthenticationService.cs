@@ -6,6 +6,8 @@
 
         event EventHandler<bool>? UserLoggedOut;
 
+        ApplicationUserViewModel? ApplicationUserViewModel { get; set; }
+
         Task<Response<AuthResponse>> AuthenticateAsync(LoginUserDto loginModel);
 
         Task<HttpResponseMessage> RegisterAsync(UserDto userDto);

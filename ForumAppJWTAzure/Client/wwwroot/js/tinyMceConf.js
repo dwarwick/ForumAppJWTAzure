@@ -3,18 +3,14 @@ tinyMceConf =
     menubar: false,
     resize: true,
     statusbar: false,
-    plugins: 'autoresize codesample link image',
+    plugins: 'autoresize codesample link',
     link_target_list: false,
     link_assume_external_targets: 'https',
     link_context_toolbar: true,
     link_default_protocol: 'https',
-    automatic_uploads: true,    
-    images_upload_url: `${window.location.protocol}//${window.location.host}/api/storage/uploadpostpic`,
-    image_dimensions: false,
-    image_caption: true,
-    image_description: false,
+    paste_data_images: false,    
     content_css: ['lib/tinymce/skins/content/tinymce-5-dark/content.min.css', "css/app-dark.css"],
-    toolbar: 'undo redo | copy cut paste pastetext | codesample link openlink image | bold italic underline subscript superscript strikethrough | alignleft aligncenter alignright alignjustify | blockquote'
+    toolbar: 'undo redo | copy cut paste pastetext | codesample link openlink | bold italic underline subscript superscript strikethrough | alignleft aligncenter alignright alignjustify | blockquote'
 }
 
 editorConf =

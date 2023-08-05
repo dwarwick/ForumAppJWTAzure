@@ -111,15 +111,15 @@ else
         if ((getUserResponse?.Success ?? false))
         {
             PostViewModel post = new PostViewModel
-                {
-                    CreatedBy = getUserResponse.Data,
-                    CreatedById = getUserResponse.Data?.Id,
-                    ReplyPostId = ReplyPost?.Id,
-                    CreatedDate = dateTime,
-                    ModifiedDate = dateTime,
-                    ForumId = forum?.Id ?? 0,
-                    Text = postText
-                };
+            {
+                CreatedBy = getUserResponse.Data,
+                CreatedById = getUserResponse.Data?.Id,
+                ReplyPostId = ReplyPost?.Id,
+                CreatedDate = dateTime,
+                ModifiedDate = dateTime,
+                ForumId = forum?.Id ?? 0,
+                Text = postText
+            };
 
             var newPostResponse = await _postService.CreateNewPost(post);
 
@@ -139,7 +139,7 @@ else
 
                 if (forum?.Posts != null && newPostResponse?.Data != null)
                 {
-                    forum.Posts.Add(newPostResponse.Data);
+                    //forum.Posts.Add(newPostResponse.Data);
                     forum.Posts = forum.Posts.OrderByDescending(x => x.ModifiedDate).ToList();
                 }
 

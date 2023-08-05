@@ -116,7 +116,7 @@
 
 @if (ViewingImages)
 {
-    <DragableWindow Description="@viewedImage.Description">
+    <DragableWindow Description="@viewedImage.Description" DescriptionEdited="DescriptionEdited" CanEdit="@(applicationUserViewModel != null)">
         <MudStack @onclick="() => ToggleOpen(viewedImage)">
             <MudImage Alt="@viewedImage.Description" Src="@viewedImage.Location" ObjectFit="ObjectFit.Fill" Fluid="true" Style="max-width:80vw;max-height:80vh;" />            
         </MudStack>
@@ -168,7 +168,7 @@
         {
             _signalRService.EditPostViewModel += (s, e) => EditPostViewModel(s, e);
 
-            if (_signalRService.HubConnection != null && post.Id > 0)
+            if (_signalRService.HubConnection != null && post?.Id > 0)
             {
                 await _signalRService.HubConnection.SendAsync("AddToGroup", $"EditPost{post.Id}");
             }
@@ -195,7 +195,7 @@
         if (viewModel == null || post?.CreatedById == applicationUserViewModel?.Id) return;
 
         post = JsonConvert.DeserializeObject<PostViewModel>(viewModel); 
-        
+
         postText = post?.Text ?? "";
 
         StateHasChanged();
@@ -223,12 +223,24 @@
 
     async Task SavePostOnClickAsync()
     {
+        if (OriginalText == postText || post == null) return;
+
         Disabled = true;
 
-        if (OriginalText == postText || post == null) return;
+        WriteEditedPost();
+    }
+
+    private async Task WriteEditedPost()
+    {
+        
 
         post.ModifiedDate = DateTime.Now;
         post.Text = postText;
+
+        if (Images.Count > 0)
+        {
+            post.Images = JsonConvert.SerializeObject(Images);
+        }
 
         Response<PostViewModel> response = await _postService.EditPost(post);
 
@@ -316,6 +328,22 @@
                 await _signalRService.HubConnection.SendAsync("RemoveFromGroup", $"EditPost{post.Id}");
                 _signalRService.EditPostViewModel -= EditPostViewModel;
             }
+        }
+    }
+
+    public async Task DescriptionEdited(string description)
+    {
+        LocationViewModel? model = Images.Find(x => x.Location == (viewedImage?.Location ?? string.Empty));
+
+        if(model != null)
+        {
+            Images.Remove(model);
+
+            model.Description = description;
+
+            Images.Add(model);
+
+            await WriteEditedPost();
         }
     }
 }

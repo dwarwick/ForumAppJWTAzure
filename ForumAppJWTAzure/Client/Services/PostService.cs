@@ -1,4 +1,5 @@
 ﻿
+using ForumAppJWTAzure.Shared.Models;
 using Microsoft.AspNetCore.SignalR.Client;
 namespace ForumAppJWTAzure.Client.Services
 {
@@ -112,6 +113,51 @@ namespace ForumAppJWTAzure.Client.Services
             catch (ApiException exception)
             {
                 response = this.ConvertApiExceptions<PostViewModel>(exception);
+            }
+
+            return response;
+        }
+
+        public async Task<Response<LocationViewModel>> UploadImage(UploadFileModel model)
+        {
+            Response<LocationViewModel> response;
+            try
+            {
+                var user = System.Text.Json.JsonSerializer.Serialize(model);
+                var requestContent = new StringContent(user, Encoding.UTF8, "application/json");
+
+                if (!await this.GetBearerToken())
+                {
+                    return new Response<LocationViewModel>() { Success = false, Message = "Not authorized" };
+                }
+
+                
+
+                
+
+                var responseMessage = await this.client.PostAsync(ApiEndpoints.UploadPostPic, requestContent);
+
+                if (responseMessage.IsSuccessStatusCode)
+                {
+                    var jsonString = responseMessage.Content.ReadAsStringAsync().Result;
+                    var myObject = JsonConvert.DeserializeObject<LocationViewModel>(jsonString);
+
+                    response = new Response<LocationViewModel>
+                    {
+                        Data = myObject!,
+                        Success = true,
+                    };                    
+
+                    return response;
+                }
+                else
+                {
+                    return new Response<LocationViewModel> { Data = new LocationViewModel { }, Message = responseMessage.ReasonPhrase ?? string.Empty, Success = false };
+                }
+            }
+            catch (ApiException exception)
+            {
+                response = this.ConvertApiExceptions<LocationViewModel>(exception);
             }
 
             return response;

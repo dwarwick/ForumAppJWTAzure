@@ -46,6 +46,10 @@
                     ////Store Token
                     await this.localStorage.SetItemAsync("accessToken", response.Data?.Token ?? string.Empty);
 
+#if DEBUG
+Console.WriteLine($"Bearer Token:\n\n{response.Data?.Token}");
+#endif
+
                     ////Change auth state of app
                     await ((ApiAuthenticationStateProvider)this.authenticationStateProvider).LoggedIn();
 

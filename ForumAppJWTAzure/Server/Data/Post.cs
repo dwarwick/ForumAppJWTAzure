@@ -12,6 +12,7 @@
 
         public int? ReplyPostId { get; set; }
 
+        public string? Images { get; set; }
         public List<Vote> Votes { get; set; } = new();
     }
 }

@@ -5,10 +5,10 @@
                 <div class="d-flex align-items-start">
                     <MudStack>
                         <UserNameComponent displayName="@(post?.CreatedBy?.DisplayName ?? "")" ProfilePicture="@post?.CreatedBy?.ProfilePicture" />
-                        @if(post != null)
+                        @if (post != null)
                         {
                             <div class="mx-1 mt-auto">Post# @PostIndex Created @StringHelper.GetLocalDate(post?.CreatedDate)</div>
-                        }                        
+                        }
                     </MudStack>
                     @if (post?.CreatedBy?.Id == (ForumCreatedById ?? ""))
                     {
@@ -30,15 +30,15 @@
                         <div class="d-flex justify-space-between h-100">
                             @if (post?.ReplyPost != null)
                             {
-                                <div class="d-flex flex-column">                                    
+                                <div class="d-flex flex-column">
                                     <UserNameComponent displayName="@(post?.ReplyPost?.CreatedBy?.DisplayName ?? "")" ProfilePicture="@post?.ReplyPost?.CreatedBy?.ProfilePicture" />
                                     <div class="mx-1 mt-auto">Replied Post # @ReplyPostNumber</div>
                                 </div>
                             }
-                            @if(post != null)
+                            @if (post != null)
                             {
-                                <PostVote applicationUserViewModel="applicationUserViewModel" postId="@(post?.Id ?? 0)" votes="@post?.Votes" postCreatedById="@post?.CreatedBy?.Id" />   
-                            }                                                    
+                                <PostVote applicationUserViewModel="applicationUserViewModel" postId="@(post?.Id ?? 0)" votes="@post?.Votes" postCreatedById="@post?.CreatedBy?.Id" />
+                            }
                         </div>
                     </div>
 
@@ -56,8 +56,19 @@
         @if (Disabled && !string.IsNullOrEmpty(postText))
         { // read only
 
-            @*<Editor @ref="ReadOnlyEditor" ScriptSrc="lib/tinymce/tinymce.min.js" JsConfSrc="editorConf" @bind-Value="@postText" />*@
-            <HTMLRenderer postText="@postText"/>
+            <HTMLRenderer postText="@postText" />
+
+            <MudPaper Elevation="5">
+                <MudStack Row="true" Spacing="5" Class="p-3">
+                    @foreach (LocationViewModel image in Images)
+                    {
+                        <MudStack @onclick="() => ToggleOpen(image)">
+                            <MudImage Alt="@image.Description" Src="@image.Location" ObjectFit="ObjectFit.ScaleDown" Width="75" />
+                            <MudText>@image.Description</MudText>
+                        </MudStack>
+                    }
+                </MudStack>
+            </MudPaper>
 
             @if ((applicationUserViewModel != null && post?.CreatedBy != null) && (post.CreatedBy.Id == applicationUserViewModel.Id))
             {
@@ -80,12 +91,38 @@
             <Editor ScriptSrc="lib/tinymce/tinymce.min.js" JsConfSrc="tinyMceConf" Disable="@Disabled" @bind-Value="@postText" />
 
             <div class="card-footer">
-                <i class="bi bi-save" @onclick="SavePostOnClickAsync" style="cursor:pointer"> Save</i>
-                <button class="bi bi-door-open" style="background-color:transparent;border:none;color:aliceblue;" @onclick="@CancelOnClick"> Cancel</button>
+                <MudStack Row="true">
+                    <MudButton StartIcon="@Icons.Material.Filled.Save" @onclick="SavePostOnClickAsync">Save</MudButton>
+                    <MudButton StartIcon="@Icons.Material.Filled.Cancel" @onclick="@CancelOnClick">Cancel</MudButton>
+                    <MudFileUpload T="IBrowserFile" FilesChanged="UploadFile">
+                        <ButtonTemplate>
+                            <MudButton HtmlTag="label"
+                                       Variant="Variant.Filled"
+                                       Color="Color.Primary"
+                                       StartIcon="@Icons.Material.Filled.Image"
+                                       for="@context">
+                                Upload File
+                            </MudButton>
+                        </ButtonTemplate>
+                    </MudFileUpload>
+                </MudStack>
             </div>
         }
     </MudCardContent>
 </MudCard>
+
+@if (ViewingImages)
+{
+    <DragableWindow Description="@viewedImage.Description">
+        <MudStack @onclick="() => ToggleOpen(viewedImage)">
+            <MudImage Alt="@viewedImage.Description" Src="@viewedImage.Location" ObjectFit="ObjectFit.Fill" Fluid="true" Style="max-width:80vw;max-height:80vh;" />
+            @*<MudText >@viewedImage.Description</MudText>*@
+        </MudStack>
+    </DragableWindow>
+}
+
+
+
 
 @code {
     ApplicationUserViewModel? applicationUserViewModel { get; set; }
@@ -93,8 +130,11 @@
     [Parameter] public string? ForumCreatedById { get; set; }
     [Parameter] public EventCallback<PostViewModel> OnReplying { get; set; }
     [Parameter] public int PostIndex { get; set; }
-    [Parameter] public Func<int,int>? PostIndexFunc { get; set; }
+    [Parameter] public Func<int, int>? PostIndexFunc { get; set; }
     [Parameter] public EventCallback<PostViewModel> postChanged { get; set; }
+
+    List<LocationViewModel> Images = new();
+    LocationViewModel viewedImage;
 
     Editor? ReadOnlyEditor;
     int ReplyPostNumber;
@@ -104,6 +144,7 @@
 
     private bool Disabled = true;
     private bool rendered = false;
+    private bool ViewingImages;
 
     protected override async Task OnInitializedAsync()
     {
@@ -116,7 +157,7 @@
 
         postText = post?.Text ?? "";
 
-        if((post?.ReplyPost?.Id ?? 0) != 0 )
+        if ((post?.ReplyPost?.Id ?? 0) != 0)
         {
             ReplyPostNumber = PostIndexFunc(post?.ReplyPost?.Id ?? 0);
         }
@@ -126,17 +167,24 @@
 
     protected override void OnAfterRender(bool firstRender)
     {
-        if (firstRender) 
-        { 
+        if (firstRender)
+        {
             rendered = true;
 
-            if(ReadOnlyEditor != null)
+            if (ReadOnlyEditor != null)
             {
                 ReadOnlyEditor.AdditionalAttributes = new Dictionary<string, object>() { { "readonly", true } };
             }
         }
     }
 
+    protected override void OnParametersSet()
+    {
+        if (!string.IsNullOrEmpty(post?.Images))
+        {
+            Images = JsonConvert.DeserializeObject<List<LocationViewModel>>(post.Images);
+        }
+    }
     void EditPostOnClick()
     {
         Disabled = false;
@@ -147,7 +195,7 @@
 
     async Task ReplyPostOnClick()
     {
-        await OnReplying.InvokeAsync(post);        
+        await OnReplying.InvokeAsync(post);
     }
 
     async Task SavePostOnClickAsync()
@@ -161,10 +209,10 @@
 
         Response<PostViewModel> response = await _postService.EditPost(post);
 
-        if(response.Success)
-        {            
+        if (response.Success)
+        {
             await postChanged.InvokeAsync(response.Data);
-        }        
+        }
     }
 
     void CancelOnClick()
@@ -173,4 +221,67 @@
 
         StateHasChanged();
     }
+
+    private async Task UploadFile(IBrowserFile file)
+    {
+        if (file.Size > 500 * 1024)
+        {
+            _snackbar.Add("File too large. Max file size is 500K.", Severity.Error);
+            return;
+        }
+        if (file != null)
+        {
+            MemoryStream ms = new MemoryStream();
+            await file.OpenReadStream().CopyToAsync(ms);
+            var bytes = ms.ToArray();
+
+            UploadFileModel model = new()
+                {
+                    Data = bytes,
+                    FileName = file.Name,
+                    PostId = post?.Id ?? 0
+                };
+
+            Response<LocationViewModel> response = await _postService.UploadImage(model);
+
+            List<LocationViewModel>? storedImages = new();
+
+            if (response.Success)
+            {
+                if (post?.Images != null)
+                {
+                    storedImages = JsonConvert.DeserializeObject<List<LocationViewModel>>(post.Images);
+                }
+
+                LocationViewModel newImage = new() { Description = file.Name, Location = response.Data?.Location };
+
+                if (storedImages != null)
+                {
+                    storedImages.Add(newImage);
+
+                    string json = JsonConvert.SerializeObject(storedImages);
+
+                    post!.Images = json;
+
+                    Response<PostViewModel> postResponse = await _postService.EditPost(post);
+
+                    if (postResponse.Success)
+                    {
+                        _snackbar.Add("Image uploaded successfully!", Severity.Success);
+                    }
+                }
+            }
+        }
+        else
+        {
+
+        }
+    }
+
+    private void ToggleOpen(LocationViewModel image)
+    {
+        viewedImage = image;
+        ViewingImages = !ViewingImages;
+    }
 }
+

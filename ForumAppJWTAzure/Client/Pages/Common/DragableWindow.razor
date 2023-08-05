@@ -1,0 +1,64 @@
+﻿<div class="modal @ModalClass" tabindex="-1" role="dialog" style="@ModalDisplay">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content" style="background-color:var(--mud-palette-background);">
+            <div class="modal-header">
+                <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="w-100">                    
+                    <MudText>@Description</MudText>
+                    <MudIconButton Class="close" data-dismiss="modal" aria-label="Close" @onclick="() => Close()" Icon="@Icons.Material.Filled.Close" />
+                </MudStack>
+            </div>
+                @ChildContent            
+        </div>
+    </div>
+</div>
+
+
+@if (ShowBackdrop)
+{
+    <div class="modal-backdrop fade show"></div>
+}
+
+
+@code {
+
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public string Description { get; set; } = string.Empty;
+    private IJSObjectReference? module;
+    private DotNetObjectReference<DragableWindow>? objRef;
+
+    public Guid Guid = Guid.NewGuid();
+    public string ModalDisplay = "display:block;";
+    public string ModalClass = "";
+    public bool ShowBackdrop = false;
+
+    protected override void OnInitialized()
+    {
+        objRef = DotNetObjectReference.Create(this);
+        Open();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            module = await _jsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/app.js");
+            await module.InvokeAsync<string>("setModalDraggableAndResizable");
+        }
+    }
+
+    public void Open()
+    {
+        ModalDisplay = "display:block;";
+        ModalClass = "Show";
+        ShowBackdrop = true;
+        StateHasChanged();
+    }
+
+    public void Close()
+    {
+        ModalDisplay = "display:none;";
+        ModalClass = "";
+        ShowBackdrop = false;
+        StateHasChanged();
+    }
+}

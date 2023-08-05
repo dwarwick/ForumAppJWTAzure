@@ -18,6 +18,7 @@
         public const string CreateNewTag = "api/tags";
         public const string UploadToStorage = "api/storage";
         public const string UploadImageToStorage = "api/storage/uploadprofilepic";
+        public const string UploadPostPic = "api/storage/uploadpostpic2";
         public const string DeleteProfilePic = "api/storage/deleteprofilepic";
         public const string Search = "api/search";
         public const string Vote = "api/votes";

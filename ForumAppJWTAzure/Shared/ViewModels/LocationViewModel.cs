@@ -3,5 +3,6 @@
     public class LocationViewModel
     {
         public string? Location { get; set; }
+        public string? Description { get; set; }
     }
 }

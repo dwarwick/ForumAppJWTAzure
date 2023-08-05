@@ -1,8 +1,8 @@
 ﻿<ErrorList errors="@errors" />
 @if (!CreatingPost)
 {
-    <Editor ScriptSrc="lib/tinymce/tinymce.min.js" JsConfSrc="editorConf" Disable="true" @bind-Value="@postText" />
-}
+    <MudText Typo="Typo.h3" Class="mb-2 text-center">@postText</MudText>
+}   
 else
 {
     <Editor ScriptSrc="lib/tinymce/tinymce.min.js" JsConfSrc="tinyMceConf" Disable="false" @bind-Value="@postText" />

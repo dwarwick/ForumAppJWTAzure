@@ -1,4 +1,5 @@
 ﻿using ForumAppJWTAzure.Shared.Helpers;
+using ForumAppJWTAzure.Shared.Models;
 using Newtonsoft.Json;
 using System.Security.AccessControl;
 
@@ -158,6 +159,58 @@ namespace ForumAppJWTAzure.Server.Controllers
                 }
 
                 return this.CreatedAtAction("Post", locationViewModel);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+
+            return this.Problem($"Could not upload to ");
+        }
+
+        [HttpPost]
+        [Route("uploadpostpic2")]
+        public async Task<ActionResult<LocationViewModel>> Post2([FromBody] UploadFileModel model)
+        {
+            LocationViewModel locationViewModel = new();
+
+            try
+            {
+                if (model.Data != null && !string.IsNullOrEmpty(model.FileName))
+                {
+                    BlobClient client = new(this.configuration["BlobStorage:PrimaryConnectionString"], this.configuration["BlobStorage:post-pic-container"], $"{Guid.NewGuid()}.png");
+
+                    using (var image = Image.Load(model.Data))
+                    {
+                        int height = image.Height;
+                        int width = image.Width;
+
+                        if (height > 300 || width > 300)
+                        {
+                            int heightDiff = height - 300;
+                            int widthDiff = width - 300;
+
+                            if (heightDiff > widthDiff)
+                            {
+                                image.Mutate(x => x.Resize(0, 300));
+                            }
+                            else
+                            {
+                                image.Mutate(x => x.Resize(300, 0));
+                            }
+                        }
+
+                        using Stream stream = new MemoryStream();
+
+                        image.SaveAsPng(stream);
+                        stream.Position = 0; // The position needs to be reset.
+
+                        await client.UploadAsync(stream);
+                        locationViewModel.Location = client.Uri.ToString();
+                    }
+                }
+
+                return this.CreatedAtAction("Post2", locationViewModel);
             }
             catch (Exception ex)
             {

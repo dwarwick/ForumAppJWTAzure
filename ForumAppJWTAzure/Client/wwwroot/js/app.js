@@ -135,3 +135,25 @@ export function highlightSnippet() {
         hljs.highlightBlock(el);
     });
 }
+
+
+
+    
+export function setModalDraggableAndResizable()
+{
+    $('.modal-content').resizable({
+        //alsoResize: ".modal-dialog",
+        minHeight: 300,
+        minWidth: 300
+    });      
+
+      $('.modal-dialog').draggable();
+
+      $('.modal-dialog').resize(function () {
+          // do something when the element is resized
+          $('.modal-content').css({
+              width: parent.width,
+              height: parent.height
+          });
+      });
+}

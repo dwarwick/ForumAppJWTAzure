@@ -11,7 +11,7 @@
         public PostViewModel? ReplyPost { get; set; }
 
         public int? ReplyPostId { get; set; }
-
+        public string? Images { get; set; }
         public List<VoteViewModel> Votes { get; set; } = new();
     }
 }

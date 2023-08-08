@@ -1,6 +1,7 @@
 
 
 using ForumAppJWTAzure.Server.Providers;
+using static ML.PredictTags;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -83,6 +84,9 @@ builder.Services.AddResponseCompression(opts =>
     opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
         new[] { "application/octet-stream" });
 });
+
+builder.Services.AddPredictionEnginePool<ModelInput, ModelOutput>()
+    .FromFile(modelName: "PredictTagsModel", filePath: "model.zip", watchForChanges: true);
 
 builder.Services.AddSingleton<ISearch, Search>();
 builder.Services.AddScoped<IApplogService, AppLogService>();

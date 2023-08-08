@@ -32,3 +32,5 @@ global using System.Security.Claims;
 global using System.IdentityModel.Tokens.Jwt;
 global using ForumAppJWTAzure.Server.Static;
 global using ForumAppJWTAzure.Shared;
+global using Microsoft.ML.Data;
+global using Microsoft.Extensions.ML;

@@ -15,6 +15,8 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="7.0.9" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="7.0.9" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="7.0.9" />
+    <PackageReference Include="Microsoft.Extensions.ML" Version="2.0.1" />
+    <PackageReference Include="Microsoft.ML" Version="2.0.1" />
     <PackageReference Include="Postmark" Version="4.7.7" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
     <PackageReference Include="Serilog.AspNetCore" Version="7.0.0" />
@@ -31,7 +33,14 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Client\ForumAppJWTAzure.Client.csproj" />
+    <ProjectReference Include="..\ML\ML.csproj" />
     <ProjectReference Include="..\Shared\ForumAppJWTAzure.Shared.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="model.zip">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 

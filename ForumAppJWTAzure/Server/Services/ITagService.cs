@@ -2,6 +2,6 @@
 {
     public interface ITagService
     {
-        Task BulkUploadTagsFromXLSX(IFormFile file, string applicationUserId);
+        Task<int> BulkUploadTagsFromXLSX(IFormFile file, string applicationUserId);
     }
 }

@@ -1,4 +1,5 @@
-﻿using HtmlAgilityPack;
+﻿using ForumAppJWTAzure.Shared.Models;
+using HtmlAgilityPack;
 using Microsoft.ML;
 using System;
 using System.Collections.Generic;
@@ -7,7 +8,6 @@ using System.Reflection;
 using System.Runtime.ConstrainedExecution;
 using System.Text;
 using System.Threading.Tasks;
-using static ML.PredictTags;
 using static System.Net.Mime.MediaTypeNames;
 
 namespace ML

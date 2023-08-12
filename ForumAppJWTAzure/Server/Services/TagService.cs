@@ -7,27 +7,33 @@ namespace ForumAppJWTAzure.Server.Services
     {
         private readonly ApplicationDbContext context;
 
-        public TagService(ApplicationDbContext context) 
-        { 
+        public TagService(ApplicationDbContext context)
+        {
             this.context = context;
         }
 
-        public async Task BulkUploadTagsFromXLSX(IFormFile file, string applicationUserId)
+        public async Task<int> BulkUploadTagsFromXLSX(IFormFile file, string applicationUserId)
         {
             ExcelMapper excelMapper = new ExcelMapper();
-            Stream memoryStream = new MemoryStream();
-            file.CopyToAsync(memoryStream);
-            IEnumerable<UploadTagsModel> tags = excelMapper.Fetch<UploadTagsModel>(memoryStream, 0).ToList();
+            List<ModelInput> tags = new();
+
+            excelMapper.HeaderRow = false;
+            using (Stream memoryStream = new MemoryStream())
+            {
+                await file.CopyToAsync(memoryStream);
+                tags = excelMapper.Fetch<ModelInput>(memoryStream, 0).ToList();
+            }
+
 
             List<Tag> existingTags = context.Tags.AsNoTracking().ToList();
 
-            List<string> stringList = tags.Select(x => x.Tag).Distinct().ToList();
+            List<string> stringList = tags.Select(x => x.Tags).Distinct().ToList();
 
             List<Tag> NewTags = new List<Tag>();
 
             foreach (string tagString in stringList)
             {
-                if(!existingTags.Any(x => x.Name == tagString))
+                if (!existingTags.Any(x => x.Name == tagString))
                 {
                     Tag tag = new()
                     {
@@ -49,7 +55,7 @@ namespace ForumAppJWTAzure.Server.Services
 
                 Console.WriteLine($"Error uploading tags: {ex}");
             }
-            
+            return NewTags?.Count ?? 0;
         }
     }
 }

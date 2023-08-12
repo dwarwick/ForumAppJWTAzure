@@ -12,5 +12,6 @@ namespace ForumAppJWTAzure.Shared.Models
         public string? FileName { get; set; }
         public string? StoredFileName { get; set; }
         public int ErrorCode { get; set; }
+        public int NumberTagsUploaded { get; set; }
     }
 }

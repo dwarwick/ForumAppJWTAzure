@@ -20,7 +20,7 @@
         public const string UploadImageToStorage = "api/storage/uploadprofilepic";
         public const string UploadPostPic = "api/storage/uploadpostpic2";
         public const string DeleteProfilePic = "api/storage/deleteprofilepic";
-        public const string UploadMlTags = "api/storage/uploadmltags";
+        public const string UploadMlTags = "api/tags/uploadmltags";
 
         public const string Search = "api/search";
         public const string Vote = "api/votes";

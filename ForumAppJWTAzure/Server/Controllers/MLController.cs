@@ -1,8 +1,8 @@
 ﻿using ForumAppJWTAzure.Shared.Helpers;
+using ForumAppJWTAzure.Shared.Models;
 using Microsoft.AspNetCore.Mvc;
 using Nest;
 using System.Text.Json;
-using static ML.PredictTags;
 
 namespace ForumAppJWTAzure.Server.Controllers
 {

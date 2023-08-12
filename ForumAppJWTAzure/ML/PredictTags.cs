@@ -5,59 +5,13 @@ using System;
 using System.Linq;
 using System.IO;
 using System.Collections.Generic;
+using ForumAppJWTAzure.Shared.Models;
+
 namespace ML
 {
     public partial class PredictTags
     {
-        /// <summary>
-        /// model input class for PredictTags.
-        /// </summary>
-        #region model input class
-        public class ModelInput
-        {
-            [ColumnName(@"Title")]
-            [LoadColumn(1)]
-            public string Title { get; set; }
-
-            [ColumnName(@"Body")]
-            [LoadColumn(2)]
-            public string Body { get; set; }
-
-            [ColumnName(@"Tags")]
-            [LoadColumn(3)]
-            public string Tags { get; set; }
-
-        }
-
-        #endregion
-
-        /// <summary>
-        /// model output class for PredictTags.
-        /// </summary>
-        #region model output class
-        public class ModelOutput
-        {
-            [ColumnName(@"Title")]
-            public float[] Title { get; set; }
-
-            [ColumnName(@"Body")]
-            public float[] Body { get; set; }
-
-            [ColumnName(@"Tags")]
-            public uint Tags { get; set; }
-
-            [ColumnName(@"Features")]
-            public float[] Features { get; set; }
-
-            [ColumnName(@"PredictedLabel")]
-            public string PredictedLabel { get; set; }
-
-            [ColumnName(@"Score")]
-            public float[] Score { get; set; }
-
-        }
-
-        #endregion
+        
 
         private static string MLNetModelPath = Path.GetFullPath("PredictTags.zip");
 

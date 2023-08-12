@@ -1,6 +1,7 @@
 
 
 using ForumAppJWTAzure.Server.Providers;
+using ForumAppJWTAzure.Shared.Models;
 using static ML.PredictTags;
 
 var builder = WebApplication.CreateBuilder(args);

@@ -7,14 +7,22 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 Console.WriteLine("Hello, World!");
 System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
 
-//List<ModelInput> list = ParseExcel.ImportFromXLSX(@"C:\Users\bgmsd\Downloads\QueryResults (1).xlsx");
-
 MLContext mlContext = new MLContext();
 
-IDataView dataView = PreProcessor.LoadDataToList(@"C:\Users\bgmsd\Downloads\QueryResults (1).xlsx");
-//IDataView dataView = PreProcessor.LoadData();
+string inputFileName = @"C:\Users\bgmsd\Downloads\QueryResults (1).xlsx";
+
+
+
+// 1 based tag number. Must be 1 or greater.
+int tagNumber = 5;
+
+string outputFileName = @$"C:\Users\bgmsd\Downloads\QueryResults (1)_output_{tagNumber}.xlsx";
+
+IDataView dataView = PreProcessor.LoadDataToList(inputFileName, outputFileName, tagNumber);
 
 ITransformer model = PredictTags.RetrainPipeline(mlContext, dataView);
 
 // Save Trained Model
-mlContext.Model.Save(model, dataView.Schema, "model.zip");
+
+Console.WriteLine($"{DateTime.Now.ToLongTimeString()} Saving model");
+mlContext.Model.Save(model, dataView.Schema, $"model_{tagNumber}.zip");

@@ -9,7 +9,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ForumAppJWTAzure.Client", "
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ForumAppJWTAzure.Shared", "ForumAppJWTAzure\Shared\ForumAppJWTAzure.Shared.csproj", "{5CB39C07-0E1C-4408-9782-0FFC8D782C70}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ML", "ForumAppJWTAzure\ML\ML.csproj", "{ACF846C6-F3D4-44FC-BA71-1F41E7F38CB3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ML", "ForumAppJWTAzure\ML\ML.csproj", "{ACF846C6-F3D4-44FC-BA71-1F41E7F38CB3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

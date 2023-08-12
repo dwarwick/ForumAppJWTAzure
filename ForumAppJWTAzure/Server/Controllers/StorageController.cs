@@ -1,7 +1,16 @@
-﻿using ForumAppJWTAzure.Shared.Helpers;
+﻿using ExcelDataReader;
+using ForumAppJWTAzure.Shared.Helpers;
 using ForumAppJWTAzure.Shared.Models;
+using MathNet.Numerics.Distributions;
 using Newtonsoft.Json;
+using System.Data;
+using System.Net;
 using System.Security.AccessControl;
+using Ganss.Excel;
+using Microsoft.AspNetCore.Components.Forms;
+using System.Net.Http.Headers;
+using ForumAppJWTAzure.Shared.ViewModels;
+using System.IO;
 
 namespace ForumAppJWTAzure.Server.Controllers
 {
@@ -12,12 +21,20 @@ namespace ForumAppJWTAzure.Server.Controllers
         private readonly IConfiguration configuration;
         private readonly IApplogService appLogService;
         private readonly UserManager<ApplicationUser> userManager;
+        private readonly ITagService tagService;
+        private readonly IWebHostEnvironment env;
+        private readonly ILogger<StorageController> logger;
         private string classFileName = "StorageController";
-        public StorageController(IConfiguration configuration, IApplogService appLogService, UserManager<ApplicationUser> userManager)
+        public StorageController(IConfiguration configuration, IApplogService appLogService, UserManager<ApplicationUser> userManager, IWebHostEnvironment env,
+        ILogger<StorageController> logger, ITagService tagService)
         {
             this.configuration = configuration;
             this.appLogService = appLogService;
             this.userManager = userManager;
+            this.tagService = tagService;
+
+            this.env = env;
+            this.logger = logger;
         }
 
         // GET: api/<StorageController>
@@ -117,55 +134,84 @@ namespace ForumAppJWTAzure.Server.Controllers
 
         // POST api/<StorageController>
         [HttpPost]
-        [Route("uploadpostpic")]
-        public async Task<ActionResult<StorageViewModel>> Post(IFormFile file)
+        [Route("uploadmltags")]
+        public async Task<ActionResult<IList<UploadResult>>> UploadMlTags(
+        [FromForm] IEnumerable<IFormFile> files)
         {
-            LocationViewModel locationViewModel = new();
+            
 
-            try
+            var maxAllowedFiles = 3;
+            long maxFileSize = 1024 * 1024 * 15;
+            var filesProcessed = 0;
+            var resourcePath = new Uri($"{Request.Scheme}://{Request.Host}/");
+            List<UploadResult> uploadResults = new();
+
+            foreach (var file in files)
             {
-                if (file != null && !string.IsNullOrEmpty(file.FileName))
+                var uploadResult = new UploadResult();
+                string trustedFileNameForFileStorage;
+                var untrustedFileName = file.FileName;
+                uploadResult.FileName = untrustedFileName;
+                var trustedFileNameForDisplay =
+                    WebUtility.HtmlEncode(untrustedFileName);
+
+                if (filesProcessed < maxAllowedFiles)
                 {
-                    BlobClient client = new(this.configuration["BlobStorage:PrimaryConnectionString"], "post-pics", $"{Guid.NewGuid()}.png");
-
-                    using (var image = Image.Load(file.OpenReadStream()))
+                    if (file.Length == 0)
                     {
-                        int height = image.Height;
-                        int width = image.Width;
-
-                        if (height > 300 || width > 300)
-                        {
-                            int heightDiff = height - 300;
-                            int widthDiff = width - 300;
-
-                            if (heightDiff > widthDiff)
-                            {
-                                image.Mutate(x => x.Resize(0, 300));
-                            }
-                            else
-                            {
-                                image.Mutate(x => x.Resize(300, 0));
-                            }
-                        }
-
-                        using Stream stream = new MemoryStream();
-
-                        image.SaveAsPng(stream);
-                        stream.Position = 0; // The position needs to be reset.
-
-                        await client.UploadAsync(stream);
-                        locationViewModel.Location = client.Uri.ToString();
+                        logger.LogInformation("{FileName} length is 0 (Err: 1)",
+                            trustedFileNameForDisplay);
+                        uploadResult.ErrorCode = 1;
                     }
+                    else if (file.Length > maxFileSize)
+                    {
+                        logger.LogInformation("{FileName} of {Length} bytes is " +
+                            "larger than the limit of {Limit} bytes (Err: 2)",
+                            trustedFileNameForDisplay, file.Length, maxFileSize);
+                        uploadResult.ErrorCode = 2;
+                    }
+                    else
+                    {
+                        try
+                        {
+                            tagService.BulkUploadTagsFromXLSX(file, await GetApplicationUserId());
+
+
+                            trustedFileNameForFileStorage = $"{Guid.NewGuid()}.xlsx";
+                            
+                            //BlobContainerClient containerClient = new BlobContainerClient(this.configuration["BlobStorage:PrimaryConnectionString"], this.configuration["BlobStorage:ml-tags-container"]);
+                            //containerClient.CreateIfNotExists();
+
+                            //BlobClient client = new(this.configuration["BlobStorage:PrimaryConnectionString"], this.configuration["BlobStorage:ml-tags-container"], $"{Guid.NewGuid()}.xlsx");
+                            
+                            //await client.UploadAsync(file.OpenReadStream());
+                            //uploadResult.StoredFileName = client.Uri.ToString();
+                            
+                            uploadResult.Uploaded = true;
+                            
+                        }
+                        catch (IOException ex)
+                        {
+                            logger.LogError("{FileName} error on upload (Err: 3): {Message}",
+                                trustedFileNameForDisplay, ex.Message);
+                            uploadResult.ErrorCode = 3;
+                        }
+                    }
+
+                    filesProcessed++;
+                }
+                else
+                {
+                    logger.LogInformation("{FileName} not uploaded because the " +
+                        "request exceeded the allowed {Count} of files (Err: 4)",
+                        trustedFileNameForDisplay, maxAllowedFiles);
+                    uploadResult.ErrorCode = 4;
                 }
 
-                return this.CreatedAtAction("Post", locationViewModel);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);
+                uploadResults.Add(uploadResult);
             }
 
-            return this.Problem($"Could not upload to ");
+            return new CreatedResult(resourcePath, uploadResults);
         }
 
         [HttpPost]

@@ -15,19 +15,27 @@ namespace ML
 
     public static class PreProcessor
     {
-        public static IDataView LoadDataToList(string XlsxPath)
+        public static IDataView LoadDataToList(string XlsxPath, string outputXlsxPath, int tagNumber)
         {
             //Create MLContext
             MLContext mlContext = new MLContext();
 
+            Console.WriteLine($"{DateTime.Now.ToLongTimeString()} Importing data");
             List<ModelInput> list = ParseExcel.ImportFromXLSX(XlsxPath);
+            
 
+
+            Console.WriteLine($"{DateTime.Now.ToLongTimeString()} Removing pre nodes");
             list = RemovePreNodes(list);
 
-            list = RemoveAllButFirstTag(list);
+            Console.WriteLine($"{DateTime.Now.ToLongTimeString()} Removing tags");
+            list = RemoveAllButFirstTag(list, tagNumber);
 
+            Console.WriteLine($"{DateTime.Now.ToLongTimeString()} Outputing to XLSX: {list.Count} rows");
+            ParseExcel.OutputToXLSX(outputXlsxPath, list);
 
-            //Load Data           
+            //Load Data
+            Console.WriteLine($"{DateTime.Now.ToLongTimeString()} Creating IDataview");
             IDataView data = mlContext.Data.LoadFromEnumerable<ModelInput>(list);
 
             return data;
@@ -69,7 +77,7 @@ namespace ML
             return output;
         }
 
-        private static List<ModelInput> RemoveAllButFirstTag(List<ModelInput> list)
+        private static List<ModelInput> RemoveAllButFirstTag(List<ModelInput> list, int tagNumber)
         {
             List<ModelInput> output = new();
 
@@ -79,7 +87,11 @@ namespace ML
                 string step2 = step1.Replace("<", " ");
                 string step3 = step2.Replace(">", " ").TrimStart().TrimEnd();
 
-                string tag = step3.Split(" ")[0];
+                string[] tags = step3.Split(" ");
+
+                if (tags.Length < tagNumber) continue;
+
+                string tag = tags[tagNumber - 1];
 
                 ModelInput outputRow = new()
                 {

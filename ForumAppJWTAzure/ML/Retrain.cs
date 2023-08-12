@@ -20,7 +20,11 @@ namespace ML
         /// <returns></returns>
         public static ITransformer RetrainPipeline(MLContext mlContext, IDataView trainData)
         {
+            Console.WriteLine($"{DateTime.Now.ToLongTimeString()} Building pipeline");
             var pipeline = BuildPipeline(mlContext);
+
+
+            Console.WriteLine($"{DateTime.Now.ToLongTimeString()} Training model");
             var model = pipeline.Fit(trainData);
 
             return model;

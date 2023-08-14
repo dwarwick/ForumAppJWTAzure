@@ -13,6 +13,7 @@ namespace ForumAppJWTAzure.Server.Controllers
         private readonly ApplicationDbContext context;
         private readonly IMapper mapper;
         private readonly IApplogService appLogService;
+        private readonly ITagService tagService;
         private readonly PredictionEnginePool<ModelInput, ModelOutput> PredictTagsModel_1;
         private readonly PredictionEnginePool<ModelInput, ModelOutput> PredictTagsModel_2;
         private readonly PredictionEnginePool<ModelInput, ModelOutput> PredictTagsModel_3;
@@ -25,6 +26,7 @@ namespace ForumAppJWTAzure.Server.Controllers
             IMapper mapper, 
             UserManager<ApplicationUser> userManager,
             IApplogService applogService,
+            ITagService tagService,
             PredictionEnginePool<ModelInput, ModelOutput> PredictTagsModel_1,
             PredictionEnginePool<ModelInput, ModelOutput> PredictTagsModel_2,
             PredictionEnginePool<ModelInput, ModelOutput> PredictTagsModel_3,
@@ -34,6 +36,7 @@ namespace ForumAppJWTAzure.Server.Controllers
             this.context = context;
             this.mapper = mapper;
             appLogService = applogService;
+            this.tagService = tagService;
             this.PredictTagsModel_1 = PredictTagsModel_1;
             this.PredictTagsModel_2 = PredictTagsModel_2;
             this.PredictTagsModel_3 = PredictTagsModel_3;
@@ -43,9 +46,13 @@ namespace ForumAppJWTAzure.Server.Controllers
         // POST: api/Forum
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<List<ModelOutput>>> PredictHandler(ModelInput input)
+        [Route("predicttags")]
+        [Authorize]
+        public async Task<ActionResult<List<TagViewModel>>> PredictHandler(ModelInput input)
         {
             List<ModelOutput> modelOutputs = new();
+
+            List<TagViewModel> tags = new ();
 
             try
             {                
@@ -56,27 +63,27 @@ namespace ForumAppJWTAzure.Server.Controllers
                     modelOutputs.Add(output);
                 }
 
-                output = PredictTagsModel_2.Predict(modelName: "PredictTagsModel_2", input);
+                output = PredictTagsModel_1.Predict(modelName: "PredictTagsModel_2", input);
 
                 if (output != null && !string.IsNullOrEmpty(output?.PredictedLabel))
                 {
                     modelOutputs.Add(output);
                 }
 
-                output = PredictTagsModel_3.Predict(modelName: "PredictTagsModel_3", input);
+                output = PredictTagsModel_1.Predict(modelName: "PredictTagsModel_3", input);
 
                 if (output != null && !string.IsNullOrEmpty(output?.PredictedLabel))
                 {
                     modelOutputs.Add(output);
                 }
-                output = PredictTagsModel_4.Predict(modelName: "PredictTagsModel_4", input);
+                output = PredictTagsModel_1.Predict(modelName: "PredictTagsModel_4", input);
 
                 if (output != null && !string.IsNullOrEmpty(output?.PredictedLabel))
                 {
                     modelOutputs.Add(output);
                 }
 
-                output = PredictTagsModel_5.Predict(modelName: "PredictTagsModel_5", input);
+                output = PredictTagsModel_1.Predict(modelName: "PredictTagsModel_5", input);
 
                 if (output != null && !string.IsNullOrEmpty(output?.PredictedLabel))
                 {
@@ -87,6 +94,9 @@ namespace ForumAppJWTAzure.Server.Controllers
                 {
                     return BadRequest();
                 }
+
+                tags = await tagService.GetSuggestedTags(modelOutputs);
+
             }
             catch (Exception ex)
             {

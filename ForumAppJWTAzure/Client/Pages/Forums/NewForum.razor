@@ -1,47 +1,82 @@
 ﻿@page "/forum"
 @attribute [Authorize]
 
-@if (tagArray != null)
-{
-    
-        <MudCard>
-            <EditForm Model="@forum" OnValidSubmit="@SubmitOnClickAsync">
-                <FluentValidationValidator @ref="Validator" Options="@(options => options.IncludeAllRuleSets())" />
+<Spinner IsLoading=@(tagArray == null)>
+    <MudCard>
+        <EditForm Model="@forum" OnValidSubmit="@SubmitOnClickAsync">
+            <FluentValidationValidator @ref="Validator" Options="@(options => options.IncludeAllRuleSets())" />
 
+            <MudCardHeader><MudText Typo="Typo.h3">Create New Forum Post</MudText></MudCardHeader>
+            <MudCardContent>
+                <ValidationSummary style="color:#f64e62ff;" />
 
-                <MudCardHeader><MudText Typo="Typo.h3">Create New Forum Post</MudText></MudCardHeader>
-                <MudCardContent>
-                    <ValidationSummary style="color:#f64e62ff;" />
+                <MudTextField Class="mb-2" @bind-Value="forum.Title" For="@(() => forum.Title)" Immediate="true" Label="Forum Title" />
 
-                    <MudTextField Class="mb-2" @bind-Value="forum.Title" For="@(() => forum.Title)" Immediate="true" Label="Forum Title" />
+                @* Configured in tinyMceConf.js *@
+                <Editor ScriptSrc="lib/tinymce/tinymce.min.js" JsConfSrc="tinyMceConf" @bind-Value="forum.PostText" Field="() => forum.PostText" ValidateOnInput="@true" />
 
-                    @* Configured in tinyMceConf.js *@
-                    <Editor ScriptSrc="lib/tinymce/tinymce.min.js" JsConfSrc="tinyMceConf" @bind-Value="forum.PostText" Field="() => forum.PostText" ValidateOnInput="@true" />
+                <MudAutocomplete T="string" Label="Tags" Value="selectedTagString" SearchFunc="@Search1" MaxItems="100" MinCharacters="2" ResetValueOnEmptyText="true" ValueChanged="@(e => SelectedTagString(e))" CoerceText="true" CoerceValue="true">
+                    <MoreItemsTemplate>
+                        <MudText Align="Align.Center" Class="px-4 py-1">
+                            Minimum 2 characters initiate a search of this list. Only the first 100 items are shown
+                        </MudText>
+                    </MoreItemsTemplate>
+                </MudAutocomplete>
 
-                    <MudAutocomplete T="string" Label="Tags" Value="selectedTagString" SearchFunc="@Search1" MaxItems="null" ResetValueOnEmptyText="true" ValueChanged="@(e => SelectedTagString(e))" CoerceText="true" CoerceValue="true" />
-
-                    <MudPaper Class="mt-2 p-4" Elevation="5">
-                        @if (forum.Tags != null)
-                        {
-                            <MudStack Row="true">
-                                @foreach (TagViewModel selectedTag in forum.Tags)
+                <MudPaper Class="mt-2 p-4" Elevation="5">
+                    @if (forum.Tags != null)
+                    {
+                        <MudStack Row="true">
+                            @foreach (TagViewModel selectedTag in forum.Tags)
+                            {
+                                @if( SuggestedTags.Select(x => x.Name).ToList().Contains(selectedTag.Name))
                                 {
-                                    <MudChip Color="Color.Primary" OnClose="(() => SelectedTagRemoved(selectedTag.Name))">@selectedTag.Name</MudChip>
+                                    <MudChip Text="@selectedTag.Name" Color="@(colors[SuggestedTags.IndexOf(selectedTag)])"></MudChip>
                                 }
-                            </MudStack>
-                        }
-                    </MudPaper>
-                </MudCardContent>
+                                else
+                                {
+                                    <MudChip Text="@selectedTag.Name" Color="Color.Primary" OnClose="(() => SelectedTagRemoved(selectedTag.Name))"></MudChip>
+                                }
+                                
+                            }
+                        </MudStack>
+                    }
+                </MudPaper>
 
-                <MudCardActions>
+                @if (ShowingSuggestedTags)
+                {
+                    <MudCard Class="my-3 p-2">
+                        <MudText Class="my-2" Align="Align.Center" Typo="Typo.subtitle1">Suggested Tags</MudText>
+                        <MudChipSet @bind-SelectedChips="selectedTags" @bind-SelectedChips:after="SelectedChipsChanged" MultiSelection="true" Filter="true">
+                            @foreach (TagViewModel suggestedTag in SuggestedTags)
+                            {                                
+                                <MudChip Text="@suggestedTag.Name" Color="@(colors[SuggestedTags.IndexOf(suggestedTag)])" Variant="Variant.Filled"/>
+                            }
+                        </MudChipSet>
+                    </MudCard>
+                }
+
+            </MudCardContent>
+
+
+
+            <MudCardActions>
+                @if(ShowingSuggestedTags)
+                {
                     <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Outlined" Class="me-2">Submit</MudButton>
-                    <MudButton OnClick="CancelOnClick" Variant="Variant.Outlined">Cancel</MudButton>
-                </MudCardActions>
+                }
+                else
+                {
+                    <MudButton Variant="Variant.Outlined" Class="me-2" OnClick="ShowSuggestedTags">Show Suggested Tags</MudButton>
+                }
+                <MudButton OnClick="CancelOnClick" Variant="Variant.Outlined">Cancel</MudButton>
+            </MudCardActions>
 
-            </EditForm>
-        </MudCard>
-    
-}
+        </EditForm>
+    </MudCard>
+</Spinner>
+
+
 
 
 @code {
@@ -50,8 +85,14 @@
     ForumViewModel forum { get; set; } = new();
     List<PostViewModel> posts = new List<PostViewModel>();
     List<TagViewModel>? allTags;
-    string[] tagArray = { };
+    List<TagViewModel> SuggestedTags = new List<TagViewModel>();
+    string[]? tagArray;
+    MudChip[] selectedTags;
     string? selectedTagString;
+
+    List<MudBlazor.Color> colors = new() { Color.Error, Color.Secondary, Color.Info, Color.Success, Color.Warning };
+
+    private bool ShowingSuggestedTags;
 
     protected override async Task OnInitializedAsync()
     {
@@ -97,16 +138,6 @@
         if (await Validator!.ValidateAsync())
         {
             errors = new();
-            posts.Add(new PostViewModel()
-                {
-                    CreatedBy = forum.CreatedBy,
-                    CreatedById = forum.CreatedById,
-                    CreatedDate = forum.CreatedDate,
-                    ModifiedDate = forum.ModifiedDate,
-                    Text = forum.PostText
-                });
-
-            forum.Posts = posts;
 
             var response = await _forumService.CreateNewForum(forum);
 
@@ -121,6 +152,35 @@
         }
 
         _navManager.NavigateTo("/forumlist");
+    }
+
+    private async Task ShowSuggestedTags()
+    {
+        if(string.IsNullOrEmpty(forum.Title) || string.IsNullOrEmpty(forum.PostText) || forum.Title.Length < 5 || forum.PostText.Length < 20)
+        {
+            _snackbar.Add("Please create a substantial forum post before trying to get suggested tags. Title must be at least 5 characters and post must be at least 20 characters in length.", Severity.Error);
+            return;
+        }
+
+        posts.Add(new PostViewModel()
+        {
+            CreatedBy = forum.CreatedBy,
+            CreatedById = forum.CreatedById,
+            CreatedDate = forum.CreatedDate,
+            ModifiedDate = forum.ModifiedDate,
+            Text = forum.PostText
+        });
+
+        forum.Posts = posts;
+
+        Response<List<TagViewModel>> response = await _tagService.GetSuggestedTags(forum);
+
+        if (response.Success && response.Data?.Count > 0)
+        {
+            SuggestedTags = response.Data;
+            ShowingSuggestedTags = true;
+        }
+
     }
 
     void CancelOnClick()
@@ -138,10 +198,18 @@
 
         TagViewModel? tagViewModel = allTags.FirstOrDefault(x => x.Name == tagText);
 
-        if (tagViewModel != null)
+        if (tagViewModel != null && tagArray != null)
         {
             tagArray.Append(tagViewModel.Name);
             forum.Tags.Remove(tagViewModel);
+
+            MudChip chip = selectedTags?.FirstOrDefault(x => x.Text == tagText) ?? new();
+
+            //selectedTags[selectedTags.ToList().IndexOf(chip)]. = false;
+
+            selectedTags.ToList().Remove(chip);
+
+            SelectedChipsChanged();
 
             StateHasChanged();
         }
@@ -149,13 +217,13 @@
 
     private async Task<IEnumerable<string>> Search1(string value)
     {
-        // In real life use an asynchronous function for fetching data from an api.
-        await Task.Delay(5);
+        if (tagArray?.Length == 0) return new string[] { };
 
         // if text is null or empty, show complete list
         if (string.IsNullOrEmpty(value))
-            return tagArray;
-        return tagArray.Where(x => x.Contains(value, StringComparison.InvariantCultureIgnoreCase));
+            return tagArray ?? new string[] { };
+
+        return tagArray?.Where(x => x.Contains(value, StringComparison.InvariantCultureIgnoreCase)) ?? new string[] { };
     }
 
     private void SelectedTagString(string value)
@@ -170,12 +238,36 @@
 
         if (tagViewModel != null)
         {
-            tagArray = tagArray.Where(x => !x.Equals(value, StringComparison.OrdinalIgnoreCase)).ToArray();
+            tagArray = tagArray?.Where(x => !x.Equals(value, StringComparison.OrdinalIgnoreCase)).ToArray();
             forum.Tags.Add(tagViewModel);
         }
 
-        if (tagArray.Length == 0) selectedTagString = "";
+        if (tagArray?.Length == 0) selectedTagString = "";
 
         StateHasChanged();
+    }
+
+    private void SelectedChipsChanged()
+    {
+        List<TagViewModel> selected = allTags?.Where(x => selectedTags.Select(s => s.Text).Contains(x.Name)).ToList() ?? new();
+
+        foreach(TagViewModel tag in SuggestedTags)
+        {
+            if(forum.Tags.Select(x => x.Name).ToList().Contains(tag.Name)) // if the user previously added one of the suggested tags
+            {
+                if(!selected.Select(x => x.Name).ToList().Contains(tag.Name)) // if the user removed the selected tag
+                {
+                    forum.Tags.Remove(tag); // remove it from forum.Tags
+                }
+            }
+            else
+            { // if forum.tags does not contain the suggested tag
+
+                if(selected.Select(x => x.Name).ToList().Contains(tag.Name)) // if the user wants to add the suggested tag to forum.tags
+                {
+                    forum.Tags.Add(tag);
+                }
+            }
+        }
     }
 }

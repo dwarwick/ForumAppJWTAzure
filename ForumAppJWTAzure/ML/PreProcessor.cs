@@ -1,4 +1,5 @@
-﻿using ForumAppJWTAzure.Shared.Models;
+﻿using ForumAppJWTAzure.Shared.Helpers;
+using ForumAppJWTAzure.Shared.Models;
 using HtmlAgilityPack;
 using Microsoft.ML;
 using System;
@@ -26,7 +27,7 @@ namespace ML
 
 
             Console.WriteLine($"{DateTime.Now.ToLongTimeString()} Removing pre nodes");
-            list = RemovePreNodes(list);
+            list = HtmlHelpers.RemovePreNodes(list);
 
             Console.WriteLine($"{DateTime.Now.ToLongTimeString()} Removing tags");
             list = RemoveAllButFirstTag(list, tagNumber);
@@ -39,43 +40,7 @@ namespace ML
             IDataView data = mlContext.Data.LoadFromEnumerable<ModelInput>(list);
 
             return data;
-        }
-
-
-
-
-        public static List<ModelInput> RemovePreNodes(List<ModelInput> list)
-        {
-            List<ModelInput> output = new();
-
-            foreach (ModelInput input in list)
-            {
-                if (input.Body == null) continue;
-
-                var htmlDoc = new HtmlDocument();
-
-                htmlDoc.LoadHtml(input.Body);
-
-                HtmlNodeCollection preNodes = htmlDoc.DocumentNode.SelectNodes("//pre");
-
-                if (preNodes == null) continue;
-
-                foreach (HtmlNode preNode in preNodes)
-                {
-                    preNode.Remove();
-                }
-
-                ModelInput outputRow = new()
-                {
-                    Title = input.Title,
-                    Body = htmlDoc.DocumentNode.InnerText,
-                    Tags = input.Tags,
-                };
-
-                output.Add(outputRow);
-            }
-            return output;
-        }
+        }        
 
         private static List<ModelInput> RemoveAllButFirstTag(List<ModelInput> list, int tagNumber)
         {

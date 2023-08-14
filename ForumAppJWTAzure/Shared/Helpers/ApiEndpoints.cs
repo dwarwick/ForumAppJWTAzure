@@ -27,6 +27,7 @@
         public const string AppLog = "api/applog";
         public const string Configuration = "api/appsetting";
         public const string ML = "api/ml";
+        public const string PredictTags = "api/ml/predicttags";
 
         public const string SearchBySearchTerm = "api/search/searchbysearchterm";
     }

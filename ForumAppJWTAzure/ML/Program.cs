@@ -9,14 +9,14 @@ System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Inst
 
 MLContext mlContext = new MLContext();
 
-string inputFileName = @"C:\Users\bgmsd\Downloads\QueryResults (1).xlsx";
+string inputFileName = @"C:\Users\bgmsd\Downloads\QueryResults 2023-08-13.xlsx";
 
 
 
 // 1 based tag number. Must be 1 or greater.
-int tagNumber = 5;
+int tagNumber = 1;
 
-string outputFileName = @$"C:\Users\bgmsd\Downloads\QueryResults (1)_output_{tagNumber}.xlsx";
+string outputFileName = @$"C:\Users\bgmsd\Downloads\QueryResults 2023-08-13_output_{tagNumber}.xlsx";
 
 IDataView dataView = PreProcessor.LoadDataToList(inputFileName, outputFileName, tagNumber);
 

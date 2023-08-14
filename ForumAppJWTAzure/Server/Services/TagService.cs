@@ -6,10 +6,12 @@ namespace ForumAppJWTAzure.Server.Services
     public class TagService : ITagService
     {
         private readonly ApplicationDbContext context;
+        private readonly IMapper mapper;
 
-        public TagService(ApplicationDbContext context)
+        public TagService(ApplicationDbContext context, IMapper mapper)
         {
             this.context = context;
+            this.mapper = mapper;
         }
 
         public async Task<int> BulkUploadTagsFromXLSX(IFormFile file, string applicationUserId)
@@ -56,6 +58,19 @@ namespace ForumAppJWTAzure.Server.Services
                 Console.WriteLine($"Error uploading tags: {ex}");
             }
             return NewTags?.Count ?? 0;
+        }
+
+        public async Task<List<TagViewModel>> GetSuggestedTags(List<ModelOutput> outputTags)
+        {
+            List<Tag> tags = new ();
+
+            foreach(var outputTag in outputTags)
+            {
+                Tag tag = await context.Tags.Where(x => x.Name == outputTag.PredictedLabel).FirstOrDefaultAsync() ?? new Tag();
+                tags.Add(tag);
+            }
+
+            return mapper.Map<List<TagViewModel>>(tags);
         }
     }
 }

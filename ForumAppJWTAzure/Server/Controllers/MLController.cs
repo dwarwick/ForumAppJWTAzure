@@ -104,8 +104,7 @@ namespace ForumAppJWTAzure.Server.Controllers
                 return this.Problem($"Something Went Wrong in the {nameof(this.PredictHandler)}", statusCode: 500);
             }
 
-            //return Ok(modelOutputs);
-            return Ok();
+            return Ok(tags);
         }
     }
 }

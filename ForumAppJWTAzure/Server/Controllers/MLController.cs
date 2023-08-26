@@ -1,6 +1,7 @@
 ﻿using ForumAppJWTAzure.Shared.Helpers;
 using ForumAppJWTAzure.Shared.Models;
 using Microsoft.AspNetCore.Mvc;
+using ML;
 using Nest;
 using System.Text.Json;
 
@@ -51,49 +52,51 @@ namespace ForumAppJWTAzure.Server.Controllers
         public async Task<ActionResult<List<TagViewModel>>> PredictHandler(ModelInput input)
         {
             List<ModelOutput> modelOutputs = new();
-
             List<TagViewModel> tags = new ();
 
             try
-            {                
-                ModelOutput output = PredictTagsModel_1.Predict(modelName: "PredictTagsModel_1", input);
+            {
+                //ModelOutput output = PredictTagsModel_1.Predict(modelName: "PredictTagsModel_1", input);
 
-                if(output != null && !string.IsNullOrEmpty(output?.PredictedLabel)) 
-                { 
-                    modelOutputs.Add(output);
-                }
+                modelOutputs.Add(Model1.Predict(input));
+                modelOutputs.Add(Model2.Predict(input));
 
-                output = PredictTagsModel_1.Predict(modelName: "PredictTagsModel_2", input);
+                //if (output != null && !string.IsNullOrEmpty(output?.PredictedLabel)) 
+                //{ 
+                //    modelOutputs1.Add(output);
+                //}
 
-                if (output != null && !string.IsNullOrEmpty(output?.PredictedLabel))
-                {
-                    modelOutputs.Add(output);
-                }
+                //output = PredictTagsModel_1.Predict(modelName: "PredictTagsModel_2", input);
 
-                output = PredictTagsModel_1.Predict(modelName: "PredictTagsModel_3", input);
+                //if (output != null && !string.IsNullOrEmpty(output?.PredictedLabel))
+                //{
+                //    modelOutputs.Add(output);
+                //}
 
-                if (output != null && !string.IsNullOrEmpty(output?.PredictedLabel))
-                {
-                    modelOutputs.Add(output);
-                }
-                output = PredictTagsModel_1.Predict(modelName: "PredictTagsModel_4", input);
+                //output = PredictTagsModel_1.Predict(modelName: "PredictTagsModel_3", input);
 
-                if (output != null && !string.IsNullOrEmpty(output?.PredictedLabel))
-                {
-                    modelOutputs.Add(output);
-                }
+                //if (output != null && !string.IsNullOrEmpty(output?.PredictedLabel))
+                //{
+                //    modelOutputs.Add(output);
+                //}
+                //output = PredictTagsModel_1.Predict(modelName: "PredictTagsModel_4", input);
 
-                output = PredictTagsModel_1.Predict(modelName: "PredictTagsModel_5", input);
+                //if (output != null && !string.IsNullOrEmpty(output?.PredictedLabel))
+                //{
+                //    modelOutputs.Add(output);
+                //}
 
-                if (output != null && !string.IsNullOrEmpty(output?.PredictedLabel))
-                {
-                    modelOutputs.Add(output);
-                }
+                //output = PredictTagsModel_1.Predict(modelName: "PredictTagsModel_5", input);
 
-                if (modelOutputs == null)
-                {
-                    return BadRequest();
-                }
+                //if (output != null && !string.IsNullOrEmpty(output?.PredictedLabel))
+                //{
+                //    modelOutputs.Add(output);
+                //}
+
+                //if (modelOutputs == null)
+                //{
+                //    return BadRequest();
+                //}
 
                 tags = await tagService.GetSuggestedTags(modelOutputs);
 
@@ -105,7 +108,8 @@ namespace ForumAppJWTAzure.Server.Controllers
                 return this.Problem($"Something Went Wrong in the {nameof(this.PredictHandler)}", statusCode: 500);
             }
 
-            return Ok(modelOutputs);
+            //return Ok(modelOutputs);
+            return Ok();
         }
     }
 }

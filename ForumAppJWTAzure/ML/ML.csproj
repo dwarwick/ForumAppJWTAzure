@@ -1,21 +1,29 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net7.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
-
-  <ItemGroup>    
+  <ItemGroup>
     <PackageReference Include="ExcelMapper" Version="5.2.528" />
-    <PackageReference Include="HtmlAgilityPack" Version="1.11.51" />    
-    <PackageReference Include="Microsoft.ML" Version="2.0.1" />    
+    <PackageReference Include="HtmlAgilityPack" Version="1.11.51" />
+    <PackageReference Include="Microsoft.ML" Version="3.0.0-preview.23266.6" />
+    <PackageReference Include="Microsoft.ML.LightGbm" Version="3.0.0-preview.23266.6" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.8.3" />
     <PackageReference Include="System.Text.Encoding.CodePages" Version="7.0.0" />
   </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\Shared\ForumAppJWTAzure.Shared.csproj" />
   </ItemGroup>
-
+  <ItemGroup Label="Model1">
+    <None Include="Model1.mlnet">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <ItemGroup Label="Model2">
+    <None Include="Model2.mlnet">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 </Project>

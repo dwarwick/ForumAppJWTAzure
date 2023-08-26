@@ -15,8 +15,8 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="7.0.9" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="7.0.9" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="7.0.9" />
-    <PackageReference Include="Microsoft.Extensions.ML" Version="2.0.1" />
-    <PackageReference Include="Microsoft.ML" Version="2.0.1" />
+    <PackageReference Include="Microsoft.Extensions.ML" Version="3.0.0-preview.23266.6" />
+    <PackageReference Include="Microsoft.ML" Version="3.0.0-preview.23266.6" />    
     <PackageReference Include="Postmark" Version="4.7.7" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
     <PackageReference Include="Serilog.AspNetCore" Version="7.0.0" />
@@ -39,6 +39,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="Model1.mlnet">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="model_1.zip">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

@@ -87,7 +87,7 @@ builder.Services.AddResponseCompression(opts =>
 });
 
 builder.Services.AddPredictionEnginePool<ModelInput, ModelOutput>()
-    .FromFile(modelName: "PredictTagsModel_1", filePath: "model_1.zip", watchForChanges: true);
+    .FromFile(modelName: "PredictTagsModel_1", filePath: "model1.mlnet", watchForChanges: true);
 
 builder.Services.AddPredictionEnginePool<ModelInput, ModelOutput>()
     .FromFile(modelName: "PredictTagsModel_2", filePath: "model_2.zip", watchForChanges: true);

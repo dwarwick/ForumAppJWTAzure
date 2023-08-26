@@ -14,7 +14,7 @@ string inputFileName = @"C:\Users\bgmsd\Downloads\QueryResults 2023-08-13.xlsx";
 
 
 // 1 based tag number. Must be 1 or greater.
-int tagNumber = 1;
+int tagNumber = 5;
 
 string outputFileName = @$"C:\Users\bgmsd\Downloads\QueryResults 2023-08-13_output_{tagNumber}.xlsx";
 

@@ -90,16 +90,16 @@ builder.Services.AddPredictionEnginePool<ModelInput, ModelOutput>()
     .FromFile(modelName: "PredictTagsModel_1", filePath: "model1.mlnet", watchForChanges: true);
 
 builder.Services.AddPredictionEnginePool<ModelInput, ModelOutput>()
-    .FromFile(modelName: "PredictTagsModel_2", filePath: "model_2.zip", watchForChanges: true);
+    .FromFile(modelName: "PredictTagsModel_2", filePath: "model2.mlnet", watchForChanges: true);
 
 builder.Services.AddPredictionEnginePool<ModelInput, ModelOutput>()
-    .FromFile(modelName: "PredictTagsModel_3", filePath: "model_3.zip", watchForChanges: true);
+    .FromFile(modelName: "PredictTagsModel_3", filePath: "model3.mlnet", watchForChanges: true);
 
 builder.Services.AddPredictionEnginePool<ModelInput, ModelOutput>()
-    .FromFile(modelName: "PredictTagsModel_4", filePath: "model_4.zip", watchForChanges: true);
+    .FromFile(modelName: "PredictTagsModel_4", filePath: "model4.mlnet", watchForChanges: true);
 
 builder.Services.AddPredictionEnginePool<ModelInput, ModelOutput>()
-    .FromFile(modelName: "PredictTagsModel_5", filePath: "model_5.zip", watchForChanges: true);
+    .FromFile(modelName: "PredictTagsModel_5", filePath: "model5.mlnet", watchForChanges: true);
 
 builder.Services.AddSingleton<ISearch, Search>();
 builder.Services.AddScoped<IApplogService, AppLogService>();

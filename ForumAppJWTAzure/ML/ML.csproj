@@ -16,14 +16,4 @@
   <ItemGroup>
     <ProjectReference Include="..\Shared\ForumAppJWTAzure.Shared.csproj" />
   </ItemGroup>
-  <ItemGroup Label="Model1">
-    <None Include="Model1.mlnet">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-  <ItemGroup Label="Model2">
-    <None Include="Model2.mlnet">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
 </Project>

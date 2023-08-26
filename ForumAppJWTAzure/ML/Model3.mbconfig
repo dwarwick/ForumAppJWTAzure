@@ -1,0 +1,127 @@
+﻿{
+  "Scenario": "Classification",
+  "DataSource": {
+    "Type": "SQL",
+    "Version": 1,
+    "ColumnProperties": [
+      {
+        "ColumnName": "Title",
+        "ColumnPurpose": "Feature",
+        "ColumnDataFormat": "String",
+        "IsCategorical": false,
+        "Type": "Column",
+        "Version": 4
+      },
+      {
+        "ColumnName": "Body",
+        "ColumnPurpose": "Feature",
+        "ColumnDataFormat": "String",
+        "IsCategorical": false,
+        "Type": "Column",
+        "Version": 4
+      },
+      {
+        "ColumnName": "Tags",
+        "ColumnPurpose": "Label",
+        "ColumnDataFormat": "String",
+        "IsCategorical": false,
+        "Type": "Column",
+        "Version": 4
+      }
+    ],
+    "ConnectionString": "Data Source=(localdb)\\mssqllocaldb;Initial Catalog=Training;Integrated Security=True",
+    "CommandString": "SELECT CAST([Title] as NVARCHAR(MAX)), CAST([Body] as NVARCHAR(MAX)), CAST([Tags] as NVARCHAR(MAX)) FROM [dbo].[Results$]",
+    "DatabaseName": "Training",
+    "SelectedTableDbo": "dbo",
+    "TableName": "Results$"
+  },
+  "Environment": {
+    "Type": "LocalCPU",
+    "Version": 1
+  },
+  "RunHistory": {
+    "Version": 3,
+    "Type": "Result",
+    "Trials": [
+      {
+        "Version": 1,
+        "Type": "Trial",
+        "TrainerName": "LightGbmMulti",
+        "Score": 0.1005464480874317,
+        "RuntimeInSeconds": 1074.273,
+        "Parameter": {
+          "_SCHEMA_": "e0 * e1 * e2 * e3 * e4 * e7",
+          "e0": {
+            "InputColumnName": "Title",
+            "OutputColumnName": "Title"
+          },
+          "e1": {
+            "InputColumnName": "Body",
+            "OutputColumnName": "Body"
+          },
+          "e2": {
+            "InputColumnNames": [
+              "Title",
+              "Body"
+            ],
+            "OutputColumnName": "Features"
+          },
+          "e3": {
+            "OutputColumnName": "Tags",
+            "InputColumnName": "Tags",
+            "AddKeyValueAnnotationsAsText": false
+          },
+          "e4": {
+            "NumberOfLeaves": 4,
+            "MinimumExampleCountPerLeaf": 20,
+            "LearningRate": 1.0,
+            "NumberOfTrees": 4,
+            "SubsampleFraction": 1.0,
+            "MaximumBinCountPerFeature": 254,
+            "FeatureFraction": 1.0,
+            "L1Regularization": 2E-10,
+            "L2Regularization": 1.0,
+            "LabelColumnName": "Tags",
+            "FeatureColumnName": "Features"
+          },
+          "e7": {
+            "OutputColumnName": "PredictedLabel",
+            "InputColumnName": "PredictedLabel"
+          }
+        }
+      }
+    ],
+    "Estimators": {
+      "e0": "FeaturizeText",
+      "e1": "FeaturizeText",
+      "e2": "Concatenate",
+      "e3": "MapValueToKey",
+      "e4": "LightGbmMulti",
+      "e5": "SdcaMaximumEntropyMulti",
+      "e6": "SdcaLogisticRegressionOva",
+      "e7": "MapKeyToValue"
+    },
+    "Schema": "e0 * e1 * e2 * e3 * (e4 + e5 + e6) * e7",
+    "MetricName": "MicroAccuracy",
+    "ModelFilePath": "C:\\Users\\bgmsd\\source\\repos\\ForumAppJWTAzure\\ForumAppJWTAzure\\ML\\Model3.mlnet"
+  },
+  "Type": "TrainingConfig",
+  "Version": 4,
+  "TrainingOption": {
+    "Version": 2,
+    "Subsampling": false,
+    "Tuner": "eci-cfo",
+    "Type": "ClassificationTrainingOption",
+    "TrainingTime": 3600,
+    "OptimizeMetric": "MicroAccuracy",
+    "LabelColumn": "Tags",
+    "AvailableTrainers": [
+      "SDCA"
+    ],
+    "ValidationOption": {
+      "Version": 0,
+      "Type": "TrainValidateSplitValidationOption",
+      "SplitRatio": 0.2
+    }
+  }
+}

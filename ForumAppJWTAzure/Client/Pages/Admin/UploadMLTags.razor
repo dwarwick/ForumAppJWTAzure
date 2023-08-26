@@ -59,6 +59,8 @@
 
         using var content = new MultipartFormDataContent();
 
+        files = new();
+
         foreach (var file in e.GetMultipleFiles(maxAllowedFiles))
         {
             if (uploadResults.SingleOrDefault(f => f.FileName == file.Name) is null)

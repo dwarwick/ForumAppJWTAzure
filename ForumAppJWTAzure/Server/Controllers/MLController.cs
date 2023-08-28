@@ -53,59 +53,12 @@ namespace ForumAppJWTAzure.Server.Controllers
         {
             List<ModelOutput> modelOutputs = new();
             List<TagViewModel> tags = new ();
-
-            List<Task> tasks = new ();
-
+            
             try
             {
-                tasks.Add(Task.Run(() => { modelOutputs.Add(PredictTagsModel_1.Predict(modelName: "PredictTagsModel_1", input)); }));
-                tasks.Add(Task.Run(() => { modelOutputs.Add(PredictTagsModel_2.Predict(modelName: "PredictTagsModel_2", input)); }));
-                tasks.Add(Task.Run(() => { modelOutputs.Add(PredictTagsModel_3.Predict(modelName: "PredictTagsModel_3", input)); }));
-                tasks.Add(Task.Run(() => { modelOutputs.Add(PredictTagsModel_4.Predict(modelName: "PredictTagsModel_4", input)); }));
-                tasks.Add(Task.Run(() => { modelOutputs.Add(PredictTagsModel_5.Predict(modelName: "PredictTagsModel_5", input)); }));
-
-                await Task.WhenAll(tasks);
-
-                //modelOutputs.Add(PredictTagsModel_1.Predict(modelName: "PredictTagsModel_1", input));
-                //modelOutputs.Add(PredictTagsModel_2.Predict(modelName: "PredictTagsModel_2", input));
-                //modelOutputs.Add(PredictTagsModel_3.Predict(modelName: "PredictTagsModel_3", input));
-                //modelOutputs.Add(PredictTagsModel_4.Predict(modelName: "PredictTagsModel_4", input));
-                //modelOutputs.Add(PredictTagsModel_5.Predict(modelName: "PredictTagsModel_5", input));
-
-                //output = PredictTagsModel_1.Predict(modelName: "PredictTagsModel_2", input);
-
-                //if (output != null && !string.IsNullOrEmpty(output?.PredictedLabel))
-                //{
-                //    modelOutputs.Add(output);
-                //}
-
-                //output = PredictTagsModel_1.Predict(modelName: "PredictTagsModel_3", input);
-
-                //if (output != null && !string.IsNullOrEmpty(output?.PredictedLabel))
-                //{
-                //    modelOutputs.Add(output);
-                //}
-                //output = PredictTagsModel_1.Predict(modelName: "PredictTagsModel_4", input);
-
-                //if (output != null && !string.IsNullOrEmpty(output?.PredictedLabel))
-                //{
-                //    modelOutputs.Add(output);
-                //}
-
-                //output = PredictTagsModel_1.Predict(modelName: "PredictTagsModel_5", input);
-
-                //if (output != null && !string.IsNullOrEmpty(output?.PredictedLabel))
-                //{
-                //    modelOutputs.Add(output);
-                //}
-
-                //if (modelOutputs == null)
-                //{
-                //    return BadRequest();
-                //}
+                modelOutputs = await tagService.MakePredictions(input);                
 
                 tags = await tagService.GetSuggestedTags(modelOutputs);
-
             }
             catch (Exception ex)
             {

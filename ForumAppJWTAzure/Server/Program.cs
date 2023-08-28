@@ -2,6 +2,7 @@
 
 using ForumAppJWTAzure.Server.Providers;
 using ForumAppJWTAzure.Shared.Models;
+using Org.BouncyCastle.Tls;
 using static ML.PredictTags;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -106,7 +107,13 @@ builder.Services.AddScoped<IApplogService, AppLogService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<ITagService, TagService>();
 
+
+
+
+
 var app = builder.Build();
+
+SetService(app.Services);
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -139,3 +146,12 @@ app.MapFallbackToFile("index.html");
 app.MapHub<SignalR>("/chathub");
 
 app.Run();
+
+void SetService(IServiceProvider provider)
+{
+    using var scope = app.Services.CreateScope();
+
+    var tagService = scope.ServiceProvider.GetService<ITagService>();
+    StartupTasks startupTasks = new StartupTasks();
+    startupTasks.PrimeMlModels(tagService);
+}

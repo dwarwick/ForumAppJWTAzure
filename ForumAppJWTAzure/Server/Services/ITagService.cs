@@ -7,5 +7,7 @@ namespace ForumAppJWTAzure.Server.Services
         Task<int> BulkUploadTagsFromXLSX(IFormFile file, string applicationUserId);
 
         Task<List<TagViewModel>> GetSuggestedTags(List<ModelOutput> outputTags);
+
+        Task<List<ModelOutput>> MakePredictions(ModelInput input);
     }
 }

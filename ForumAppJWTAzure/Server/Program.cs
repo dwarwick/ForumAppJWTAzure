@@ -107,10 +107,6 @@ builder.Services.AddScoped<IApplogService, AppLogService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<ITagService, TagService>();
 
-
-
-
-
 var app = builder.Build();
 
 SetService(app.Services);

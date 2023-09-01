@@ -11,5 +11,7 @@
         public DateTime? CreatedDate { get; set; }
 
         public DateTime? ModifiedDate { get; set; }
+
+        public List<Forum> Forums { get; set; }
     }
 }

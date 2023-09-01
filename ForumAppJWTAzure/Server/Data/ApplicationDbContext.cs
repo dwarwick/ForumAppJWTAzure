@@ -23,6 +23,8 @@
 
         public virtual DbSet<AppLog> AppLogs { get; set; }
 
+        public virtual DbSet<FollowedForum> FollowedPosts { get; set; }
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
@@ -77,11 +79,21 @@
                     UserId = "8e448afa-f008-446e-a52f-13c449803c2e",
                 });
 
+            builder.Entity<Forum>().HasOne(x => x.CreatedBy);
+
             builder.Entity<Forum>().HasMany(x => x.Tags)
                     .WithMany(x => x.Forums)
                     .UsingEntity<ForumTag>(
                         x => x.HasOne(x => x.Tag)
                         .WithMany().HasForeignKey(x => x.TagId),
+                        x => x.HasOne(x => x.Forum)
+                        .WithMany().HasForeignKey(x => x.ForumId));
+
+            builder.Entity<Forum>().HasMany(x => x.Followers)
+                    .WithMany(x => x.Forums)
+                    .UsingEntity<FollowedForum>(
+                        x => x.HasOne(x => x.Follower)
+                        .WithMany().HasForeignKey(x => x.FollowerId),
                         x => x.HasOne(x => x.Forum)
                         .WithMany().HasForeignKey(x => x.ForumId));
 

@@ -23,7 +23,7 @@
 
         public virtual DbSet<AppLog> AppLogs { get; set; }
 
-        public virtual DbSet<FollowedForum> FollowedPosts { get; set; }
+        public virtual DbSet<FollowedForum> FollowedForums { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

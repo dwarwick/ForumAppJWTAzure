@@ -142,6 +142,31 @@ namespace ForumAppJWTAzure.Client.Services.Base
             return response;
         }
 
+        public virtual async Task<bool> DeleteAsync<T>(T model, string endPoint)
+        {
+            HttpResponseMessage response;
+            try
+            {
+                var payload = System.Text.Json.JsonSerializer.Serialize(model);
+                var requestContent = new StringContent(payload, Encoding.UTF8, "application/json");
+
+                if (!await this.GetBearerToken())
+                {
+                    return false;
+                }
+
+                response = await this.client.DeleteAsync(endPoint);
+
+                return response.IsSuccessStatusCode;
+            }
+            catch (ApiException exception)
+            {
+                Console.WriteLine(exception.Message);
+            }
+
+            return false;
+        }
+
         protected Response<TGuid> ConvertApiExceptions<TGuid>(ApiException apiException)
         {
             if (apiException.StatusCode == 400)

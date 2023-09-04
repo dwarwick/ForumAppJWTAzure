@@ -39,72 +39,6 @@
     "Type": "LocalCPU",
     "Version": 1
   },
-  "RunHistory": {
-    "Version": 3,
-    "Type": "Result",
-    "Trials": [
-      {
-        "Version": 1,
-        "Type": "Trial",
-        "TrainerName": "LightGbmMulti",
-        "Score": 0.19844814954658124,
-        "RuntimeInSeconds": 2611.91,
-        "Parameter": {
-          "_SCHEMA_": "e0 * e1 * e2 * e3 * e4 * e7",
-          "e0": {
-            "InputColumnName": "Title",
-            "OutputColumnName": "Title"
-          },
-          "e1": {
-            "InputColumnName": "Body",
-            "OutputColumnName": "Body"
-          },
-          "e2": {
-            "InputColumnNames": [
-              "Title",
-              "Body"
-            ],
-            "OutputColumnName": "Features"
-          },
-          "e3": {
-            "OutputColumnName": "Tags",
-            "InputColumnName": "Tags",
-            "AddKeyValueAnnotationsAsText": false
-          },
-          "e4": {
-            "NumberOfLeaves": 4,
-            "MinimumExampleCountPerLeaf": 20,
-            "LearningRate": 1.0,
-            "NumberOfTrees": 4,
-            "SubsampleFraction": 1.0,
-            "MaximumBinCountPerFeature": 254,
-            "FeatureFraction": 1.0,
-            "L1Regularization": 2E-10,
-            "L2Regularization": 1.0,
-            "LabelColumnName": "Tags",
-            "FeatureColumnName": "Features"
-          },
-          "e7": {
-            "OutputColumnName": "PredictedLabel",
-            "InputColumnName": "PredictedLabel"
-          }
-        }
-      }
-    ],
-    "Estimators": {
-      "e0": "FeaturizeText",
-      "e1": "FeaturizeText",
-      "e2": "Concatenate",
-      "e3": "MapValueToKey",
-      "e4": "LightGbmMulti",
-      "e5": "SdcaMaximumEntropyMulti",
-      "e6": "SdcaLogisticRegressionOva",
-      "e7": "MapKeyToValue"
-    },
-    "Schema": "e0 * e1 * e2 * e3 * (e4 + e5 + e6) * e7",
-    "MetricName": "MicroAccuracy",
-    "ModelFilePath": "C:\\Users\\bgmsd\\source\\repos\\ForumAppJWTAzure\\ForumAppJWTAzure\\ML\\Model1.mlnet"
-  },
   "Type": "TrainingConfig",
   "Version": 4,
   "TrainingOption": {
@@ -116,7 +50,8 @@
     "OptimizeMetric": "MicroAccuracy",
     "LabelColumn": "Tags",
     "AvailableTrainers": [
-      "SDCA"
+      "SDCA",
+      "LGBM"
     ],
     "ValidationOption": {
       "Version": 0,

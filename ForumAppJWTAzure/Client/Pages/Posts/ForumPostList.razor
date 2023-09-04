@@ -2,18 +2,29 @@
 @if (!CreatingPost)
 {
     <MudText Typo="Typo.h3" Class="mb-2 text-center">@postText</MudText>
-}   
+}
 else
 {
     <Editor ScriptSrc="lib/tinymce/tinymce.min.js" JsConfSrc="tinyMceConf" Disable="false" @bind-Value="@postText" />
 }
 
-
 <AuthorizeView>
     <Authorized>
         @if (!CreatingPost)
         {
-            <i class="bi bi-pencil" @onclick="CreatePostOnClick" style="cursor:pointer">New Post</i>
+            <MudStack Row="true">
+                <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.EditNote" OnClick="CreatePostOnClick">New Post</MudButton>
+
+                @if(IsFollowing)
+                {
+                    <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.NotificationsOff" OnClick="UnFollowOnClick">Un-follow</MudButton>
+                }
+                else
+                {
+                    <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.NotificationAdd" OnClick="FollowOnClick">Follow</MudButton>
+                }
+                
+            </MudStack>
         }
         else
         {
@@ -49,7 +60,7 @@ else
                 }
             </PagerContent>
         </MudTable>
-        <MudScrollToTop TopOffset="100"  Selector="#PostList" Style="z-index:2001;right:50px;bottom:70px;" >
+        <MudScrollToTop TopOffset="100" Selector="#PostList" Style="z-index:2001;right:50px;bottom:70px;">
             <MudFab Color="Color.Tertiary" StartIcon="@Icons.Material.Filled.ArrowCircleUp" />
         </MudScrollToTop>
     </MudPaper>
@@ -57,11 +68,16 @@ else
 
 @code {
     [Parameter] public ForumViewModel? forum { get; set; }
+
+    ApplicationUserViewModel applicationUserViewModel = new();
+
     private PostViewModel? ReplyPost;
     private MudTable<PostViewModel>? _table;
     private IJSObjectReference? module;
     private DotNetObjectReference<ForumPostList>? objRef;
     List<string>? errors;
+
+    private bool IsFollowing => applicationUserViewModel != null && forum != null && forum.Followers.Any(x => x.Id == applicationUserViewModel.Id);
     int? ReplyPostId;
     int RowsPerPage = 5;
 
@@ -79,6 +95,16 @@ else
         module = await _jsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/app.js");
         IsAuthenticated = await _authService.IsIauthenticated();
         postText = IsAuthenticated ? "" : "Please sign in to create a new post";
+
+        if (IsAuthenticated)
+        {
+            Response<ApplicationUserViewModel> response = await _authService.GetLoggedInUser();
+
+            if (response.Success)
+            {
+                applicationUserViewModel = response?.Data ?? new ApplicationUserViewModel();
+            }
+        }
     }
 
     private void CreatePostOnClick()
@@ -106,14 +132,11 @@ else
         }
 
         DateTime dateTime = DateTime.UtcNow;
-        var getUserResponse = await _authService.GetLoggedInUser();
 
-        if ((getUserResponse?.Success ?? false))
-        {
-            PostViewModel post = new PostViewModel
+        PostViewModel post = new PostViewModel
             {
-                CreatedBy = getUserResponse.Data,
-                CreatedById = getUserResponse.Data?.Id,
+                CreatedBy = applicationUserViewModel,
+                CreatedById = applicationUserViewModel.Id,
                 ReplyPostId = ReplyPost?.Id,
                 CreatedDate = dateTime,
                 ModifiedDate = dateTime,
@@ -121,35 +144,35 @@ else
                 Text = postText
             };
 
-            var newPostResponse = await _postService.CreateNewPost(post);
+        var newPostResponse = await _postService.CreateNewPost(post);
 
-            if (!(newPostResponse?.Success ?? false))
-            {
-                errors.Add("Unable to create new post");
-            }
-            else
-            {
-                if (newPostResponse.Data != null && ReplyPost != null && newPostResponse.Data.ReplyPostId != null)
-                {
-                    newPostResponse.Data.ReplyPost = ReplyPost;
-                    _snackbar.Add("Reply Posted!", Severity.Success);
-                }
-
-                if (ReplyPost == null) _snackbar.Add("Post Created!", Severity.Success);
-
-                if (forum?.Posts != null && newPostResponse?.Data != null)
-                {
-                    //forum.Posts.Add(newPostResponse.Data);
-                    forum.Posts = forum.Posts.OrderByDescending(x => x.ModifiedDate).ToList();
-                }
-
-                var searchResponse = await _searchService.Create(forum, ApiEndpoints.Search);
-
-            }
-
-            CancelOnClick();
-            StateHasChanged();
+        if (!(newPostResponse?.Success ?? false))
+        {
+            errors.Add("Unable to create new post");
         }
+        else
+        {
+            if (newPostResponse.Data != null && ReplyPost != null && newPostResponse.Data.ReplyPostId != null)
+            {
+                newPostResponse.Data.ReplyPost = ReplyPost;
+                _snackbar.Add("Reply Posted!", Severity.Success);
+            }
+
+            if (ReplyPost == null) _snackbar.Add("Post Created!", Severity.Success);
+
+            if (forum?.Posts != null && newPostResponse?.Data != null)
+            {
+                //forum.Posts.Add(newPostResponse.Data);
+                forum.Posts = forum.Posts.OrderByDescending(x => x.ModifiedDate).ToList();
+            }
+
+            var searchResponse = await _searchService.Create(forum, ApiEndpoints.Search);
+
+        }
+
+        CancelOnClick();
+        StateHasChanged();
+
     }
 
     private void ReplyToPost(PostViewModel replyPost)
@@ -182,9 +205,49 @@ else
 
     private async Task ScrollToBottom()
     {
-        if(module != null)
-        {            
+        if (module != null)
+        {
             await module.InvokeAsync<string>("ScrollToBottom", "PostList");
         }
-    }    
+    }
+
+    private async Task FollowOnClick()
+    {
+        if(applicationUserViewModel != null && !string.IsNullOrEmpty( applicationUserViewModel.Id))
+        {
+            FollowedForumViewModel model = new()
+            {
+                FollowerId = applicationUserViewModel.Id,
+                ForumId = forum?.Id ?? 0
+            };
+
+            Response<FollowedForumViewModel> response = await _forumService.Create<FollowedForumViewModel>(model, ApiEndpoints.FollowForum);
+
+            if(response.Success && forum != null)
+            {
+                forum.Followers.Add(applicationUserViewModel);
+            }
+        }
+        
+    }
+
+    private async Task UnFollowOnClick()
+    {
+        if (applicationUserViewModel != null && !string.IsNullOrEmpty(applicationUserViewModel.Id))
+        {
+            FollowedForumViewModel model = new()
+                {
+                    FollowerId = applicationUserViewModel.Id,
+                    ForumId = forum?.Id ?? 0
+                };
+
+            bool success = await _forumService.DeleteAsync<FollowedForumViewModel>(model, ApiEndpoints.UnFollowForum(forum?.Id ?? 0, applicationUserViewModel.Id));
+
+            if (success && forum != null)
+            {
+                forum.Followers.Remove(applicationUserViewModel);
+            }
+        }
+
+    }
 }

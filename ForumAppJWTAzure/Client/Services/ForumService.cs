@@ -83,5 +83,15 @@
 
             return response;
         }
+
+        public override async Task<Response<T>> Create<T>(T model, string endPoint)
+        {
+            return await base.Create<T>(model, endPoint);
+        }
+
+        public override Task<bool> DeleteAsync<T>(T model, string endPoint)
+        {
+            return base.DeleteAsync(model, endPoint);
+        }
     }
 }

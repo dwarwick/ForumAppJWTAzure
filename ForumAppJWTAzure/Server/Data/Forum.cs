@@ -8,6 +8,6 @@
 
         public List<Tag> Tags { get; set; } = new List<Tag>();
 
-        public List<ApplicationUser> Followers { get; set; }
+        public List<ApplicationUser> Followers { get; set; } = new List<ApplicationUser>();
     }
 }

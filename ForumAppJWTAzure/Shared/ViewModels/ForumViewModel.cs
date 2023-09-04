@@ -11,5 +11,7 @@
         public List<ForumTagViewModel> ForumTags { get; set; } = new List<ForumTagViewModel>();
 
         public List<TagViewModel> Tags { get; set; } = new List<TagViewModel>();
+
+        public List<ApplicationUserViewModel> Followers { get; set; } = new List<ApplicationUserViewModel>();
     }
 }

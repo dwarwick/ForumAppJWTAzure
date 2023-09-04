@@ -24,6 +24,8 @@
             this.CreateMap<VoteViewModel, Vote>().ReverseMap();
 
             this.CreateMap<AppLogViewModel, AppLog>().ReverseMap();
+
+            this.CreateMap<FollowedForumViewModel, FollowedForum>().ReverseMap();
         }
     }
 }

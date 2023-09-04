@@ -31,6 +31,7 @@
                             .Include(y => y.Posts).ThenInclude(x => x.Votes)
                             .Include(y => y.Posts.OrderByDescending(x => x.CreatedDate)).ThenInclude(x => x.CreatedBy)
                             .Include(y => y.Tags).ThenInclude(x => x.CreatedBy)
+                            .Include(y => y.Followers)
                             .ToListAsync();
             }
             catch (Exception ex)
@@ -129,6 +130,69 @@
             forumViewModel.Id = forum.Id;
 
             return this.CreatedAtAction("GetForumViewModel", new { id = forumViewModel.Id }, forumViewModel);
+        }
+
+        // POST: api/Forum
+        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [HttpPost]
+        [Route("followforum")]
+        public async Task<ActionResult<ForumViewModel>> FollowForum(FollowedForumViewModel model)
+        {
+            try
+            {
+                if (!context.FollowedForums.Any(x => x.FollowerId == model.FollowerId && x.ForumId == model.ForumId))
+                {
+                    FollowedForum mapped = mapper.Map<FollowedForum>(model);
+                    context.FollowedForums.Add(mapped);
+                    await context.SaveChangesAsync();
+                }
+                else
+                {
+                    return this.Problem($"User is already following forum.");
+                }
+            }
+            catch (Exception ex)
+            {
+                return this.Problem($"Unable to follow forum.\n\n{ex}");
+            }
+
+
+
+            return this.CreatedAtAction("FollowForum", new { id = model.ForumId }, model);
+        }
+
+        // POST: api/Forum
+        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [HttpDelete]
+        [Route("{forumId}/unfollowforum/{userId}")]
+        public async Task<ActionResult<ForumViewModel>> UnFollowForum([FromRoute] int forumId, [FromRoute] string userId)
+        {
+            try
+            {
+                if (context.FollowedForums.Any(x => x.FollowerId == userId && x.ForumId == forumId))
+                {
+                    FollowedForum followedForum = new()
+                    {
+                        FollowerId = userId, 
+                        ForumId = forumId
+                    };
+
+                    context.FollowedForums.Remove(followedForum);
+                    await context.SaveChangesAsync();
+                }
+                else
+                {
+                    return this.Problem($"User is not following forum.");
+                }
+            }
+            catch (Exception ex)
+            {
+                return this.Problem($"Unable to un-follow forum.\n\n{ex}");
+            }
+
+
+
+            return this.CreatedAtAction("UnFollowForum", new { id = forumId });
         }
 
         // DELETE: api/Forum/5

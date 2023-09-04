@@ -11,6 +11,8 @@
         public static string ConfirmEmail(string url, string token, string email) => $"{url}/api/auth/confirmemail/?token={token}&email={email}";
 
         public const string CreateNewForum = "api/forum/createnewforum";
+        public const string FollowForum = "api/forum/followforum";
+        public static string UnFollowForum(int forumId,string userId) => $"api/forum/{forumId}/unfollowforum/{userId}";
         public const string CreateNewPost = "api/post/createnewpost";
         public const string EditPost = "api/post/editpost";
         public const string GetAllForums = "api/forum";

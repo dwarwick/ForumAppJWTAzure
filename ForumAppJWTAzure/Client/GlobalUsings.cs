@@ -15,3 +15,4 @@ global using System.Text;
 global using ForumAppJWTAzure.Shared.Helpers;
 global using MudBlazor;
 global using MudBlazor.Services;
+global using System.Web;

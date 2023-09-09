@@ -1,24 +1,26 @@
-﻿<MudPaper Class="d-flex flex-grow-1">
+﻿
+@implements IDisposable
+<MudPaper Class="d-flex flex-grow-1">
     <div class="d-flex flex-grow-1 align-items-center">
-        
+
         <AuthorizeView>
             <Authorized>
                 <MudLink Href="/" Class="ms-3">Home<MudIcon Icon="@Icons.Material.Filled.Home" Class="ms-1 me-3" /></MudLink>
                 <MudLink Href="forum">New Forum<MudIcon Icon="@Icons.Material.Filled.Forum" Class="ms-1 me-3" /></MudLink>
                 <MudLink Href="forumlist">Forum List<MudIcon Icon="@Icons.Material.Filled.ViewList" Class="ms-1 me-3" /></MudLink>
 
-                @if(isAdmin)
+                @if (isAdmin)
                 {
                     <MudMenu>
                         <ActivatorContent>
-                            <MudText Color="Color.Primary">Admin Menu</MudText><MudIcon Icon="@Icons.Material.Filled.AdminPanelSettings" Color="Color.Primary"/>
+                            <MudText Color="Color.Primary">Admin Menu</MudText><MudIcon Icon="@Icons.Material.Filled.AdminPanelSettings" Color="Color.Primary" />
                         </ActivatorContent>
                         <ChildContent>
                             <MudMenuItem><MudLink Href="admin/createtag">Add Tags<MudIcon Icon="@Icons.Material.Filled.Tag" Class="ms-1 me-3" /></MudLink></MudMenuItem>
                             <MudMenuItem><MudLink Href="admin/uploadmltags">Upload ML Tags<MudIcon Icon="@Icons.Material.Filled.Tag" Class="ms-1 me-3" /></MudLink></MudMenuItem>
                             <MudMenuItem><MudLink Href="admin/viewlogs">View Logs<MudIcon Icon="@Icons.Material.Filled.BugReport" Class="ms-1 me-3" /></MudLink></MudMenuItem>
                             <MudMenuItem>Armory</MudMenuItem>
-                        </ChildContent>                        
+                        </ChildContent>
                     </MudMenu>
                 }
             </Authorized>
@@ -32,6 +34,25 @@
         <div class="ms-auto d-flex align-items-center">
             <Search />
             <MudSwitch Checked="@_darkTheme" Label="Dark Theme" CheckedChanged="@(e => UpdateTheme(e))" T="bool" />
+
+            <AuthorizeView>
+                <Authorized>
+                    <MudMenu>
+                        <ActivatorContent>
+                            <MudBadge Content="@notificationCount" Overlap="true" Class="mx-6 my-4">
+                                <MudIcon Icon="@Icons.Material.Filled.Notifications" Color="Color.Default" />
+                            </MudBadge>
+                        </ActivatorContent>
+                        <ChildContent>
+                            <MudTable T="NotificationViewModel" Items="@notifications" OnRowClick="@NavigateToNotification" Context="NotificationContext" Height="25vh" Dense="true" FixedHeader="true" Outlined="true" Hover="true">
+                                <HeaderContent><MudTh>Notifications</MudTh></HeaderContent>
+
+                                <RowTemplate><MudTd DataLabel="Notifications">@NotificationContext.Message</MudTd></RowTemplate>
+                            </MudTable>
+                        </ChildContent>
+                    </MudMenu>
+                </Authorized>
+            </AuthorizeView>
             <LoginMenu />
         </div>
     </div>
@@ -39,19 +60,39 @@
 
 @code {
     [Parameter] public EventCallback<bool> ThemeChanged { get; set; }
+    private List<NotificationViewModel>? notifications;
     ApplicationUserViewModel? applicationUserViewModel { get; set; }
     private IJSObjectReference? module;
     private string? _theme;
-    public bool _darkTheme { get; set; }    
+    public bool _darkTheme { get; set; }
+    private int notificationCount => notifications?.Count ?? 0;
 
     bool isAdmin;
 
 
 
     protected override async Task OnInitializedAsync()
-    {        
+    {
+        await ProcessUserAsync();
+
+        StateHasChanged();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        _darkTheme = _theme == "dark";
+
+        if (firstRender)
+        {
+            module = await _jsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/app.js");
+        }
+    }
+
+    private async Task ProcessUserAsync()
+    {
         _authService.UpdatedUser += (s, e) => UpdatedUser(s, e);
         _authService.UserLoggedOut += (s, e) => UserLoggedOut(s, e);
+        _signalRService.ForumChanged += (s, e) => ForumChanged(s, e);
 
         if (await _authService.IsIauthenticated() && applicationUserViewModel == null)
         {
@@ -63,7 +104,7 @@
 
                 if (applicationUserViewModel != null && applicationUserViewModel.Roles != null)
                 {
-                    isAdmin = applicationUserViewModel.Roles.Any(x => x == "Administrator");                    
+                    isAdmin = applicationUserViewModel.Roles.Any(x => x == "Administrator");
                 }
             }
         }
@@ -73,17 +114,7 @@
         if (string.IsNullOrEmpty(_theme)) _theme = applicationUserViewModel?.Theme ?? "light";
         _darkTheme = _theme == "dark";
 
-        StateHasChanged();        
-    }
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        _darkTheme = _theme == "dark";
-
-        if (firstRender)
-        {
-            module = await _jsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/app.js");
-        }
+        await UpdateNotifications();
     }
 
     private async Task UpdateTheme(bool value)
@@ -108,27 +139,86 @@
             var response = await _authService.UpdateUserAsync(applicationUserViewModel);
         }
 
-        await ThemeChanged.InvokeAsync(true);        
+        await ThemeChanged.InvokeAsync(true);
     }
 
-    private void UpdatedUser(object? sender, ApplicationUserViewModel? viewModel)
+    private async void UpdatedUser(object? sender, ApplicationUserViewModel? viewModel)
     {
 
         applicationUserViewModel = viewModel;
 
-        if(applicationUserViewModel != null && applicationUserViewModel.Roles != null)
+        if (applicationUserViewModel != null && applicationUserViewModel.Roles != null)
         {
             isAdmin = applicationUserViewModel.Roles.Any(x => x == "Administrator");
+
+            await ProcessUserAsync();
             StateHasChanged();
-        }        
+        }
     }
 
     private void UserLoggedOut(object? sender, bool value)
     {
+        LogUserOut();
+    }
+
+    private void LogUserOut()
+    {
         applicationUserViewModel = null;
         isAdmin = false;
 
+        _authService.UpdatedUser -= UpdatedUser;
+        _authService.UserLoggedOut -= UserLoggedOut;
+        _signalRService.ForumChanged -= ForumChanged;
+
         StateHasChanged();
+    }
+
+    private async void ForumChanged(object? sender, string FollowedForumViewModel)
+    {
+        await UpdateNotifications();
+
+    }
+
+    private async Task UpdateNotifications()
+    {
+        Response<List<NotificationViewModel>> response = new();
+        if (applicationUserViewModel != null && !string.IsNullOrEmpty(applicationUserViewModel.Id))
+        {
+            response = await _notificationService.GetAll<NotificationViewModel>(ApiEndpoints.GetNotifications(applicationUserViewModel.Id));
+        }
+
+
+        if (response.Success)
+        {
+            notifications = response.Data;
+        }
+
+        StateHasChanged();
+    }
+
+    private void NavigateToNotification(TableRowClickEventArgs<NotificationViewModel> notification)
+    {
+        if (notification != null && !string.IsNullOrEmpty(notification.Item.Target))
+        {
+            UriBuilder baseUri = new UriBuilder($"{_navManager.BaseUri}forumlist");
+            string queryToAppend = $"{notification.Item.Target}&NotificationId={notification.Item.Id}" ;
+
+            if (baseUri.Query != null && baseUri.Query.Length > 1)
+                // Note: In .NET Core and .NET 5+, you can simplify by removing
+                // the call to Substring(), which removes the leading "?" character.
+                baseUri.Query = baseUri.Query.Substring(1) + "&" + queryToAppend;
+            else
+                baseUri.Query = queryToAppend;
+
+            string url = HttpUtility.UrlEncode(baseUri.Uri.Query.ToString());
+
+            _navManager.NavigateTo($"{baseUri}", true);
+        }
+    }
+
+    public void Dispose()
+    {
+        LogUserOut();
     }
 }
 

@@ -10,6 +10,8 @@ namespace ForumAppJWTAzure.Client.Services
 
         event EventHandler<string>? AddPostVoteViewModel;
 
+        event EventHandler<string>? ForumChanged;
+
         HubConnection? HubConnection { get; set; }
 
         Task StartConnection();

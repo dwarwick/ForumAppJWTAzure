@@ -106,6 +106,7 @@ builder.Services.AddSingleton<ISearch, Search>();
 builder.Services.AddScoped<IApplogService, AppLogService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<ITagService, TagService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
 
 var app = builder.Build();
 

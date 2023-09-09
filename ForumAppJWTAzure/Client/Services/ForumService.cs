@@ -1,13 +1,17 @@
-﻿namespace ForumAppJWTAzure.Client.Services
+﻿using Microsoft.AspNetCore.SignalR.Client;
+
+namespace ForumAppJWTAzure.Client.Services
 {
     public class ForumService : BaseHttpService, IForumService
     {
         private readonly HttpClient client;
+        private readonly ISignalRService hubConnection;
 
-        public ForumService(HttpClient client, ILocalStorageService localStorage)
+        public ForumService(HttpClient client, ILocalStorageService localStorage, ISignalRService hubConnection)
             : base(client, localStorage)
         {
             this.client = client;
+            this.hubConnection = hubConnection;
         }
 
         public async Task<Response<List<ForumViewModel>>> GetAllForums()
@@ -38,6 +42,39 @@
             catch (ApiException exception)
             {
                 response = this.ConvertApiExceptions<List<ForumViewModel>>(exception);
+            }
+
+            return response;
+        }
+
+        public async Task<Response<ForumViewModel>> GetForum(int forumId)
+        {
+            Response<ForumViewModel> response;
+            try
+            {
+                var responseMessage = await this.client.GetAsync(ApiEndpoints.GetForum(forumId));
+
+                if (responseMessage.IsSuccessStatusCode)
+                {
+                    var jsonString = responseMessage.Content.ReadAsStringAsync().Result;
+                    var myObject = JsonConvert.DeserializeObject<ForumViewModel>(jsonString);
+
+                    response = new Response<ForumViewModel>
+                    {
+                        Data = myObject ?? new ForumViewModel(),
+                        Success = true,
+                    };
+
+                    return response;
+                }
+                else
+                {
+                    return new Response<ForumViewModel> { Data = new ForumViewModel { }, Message = responseMessage.ReasonPhrase ?? string.Empty, Success = false };
+                }
+            }
+            catch (ApiException exception)
+            {
+                response = this.ConvertApiExceptions<ForumViewModel>(exception);
             }
 
             return response;
@@ -84,12 +121,33 @@
             return response;
         }
 
-        public override async Task<Response<T>> Create<T>(T model, string endPoint)
+        public async Task<Response<FollowedForumViewModel>> FollowAsync(FollowedForumViewModel model, string endPoint)
         {
-            return await base.Create<T>(model, endPoint);
+            Response<FollowedForumViewModel> response = await base.Create(model, endPoint);
+
+            if(response.Success)
+            {
+                if (this.hubConnection != null)
+                {
+                    string serializedFollowedForumViewModel = JsonConvert.SerializeObject(response.Data, Formatting.None, new JsonSerializerSettings() { ReferenceLoopHandling = ReferenceLoopHandling.Ignore });
+
+                    ForumChangedViewModel forumChangedViewModel = new()
+                    {
+                        ViewModel = serializedFollowedForumViewModel,
+                        Message = $"You are now following {model.Title}"
+                    };
+
+                    if (this.hubConnection != null && this.hubConnection.HubConnection != null)
+                    {
+                        await this.hubConnection.HubConnection.SendAsync("ForumChanged", serializedFollowedForumViewModel ?? string.Empty, model.ForumId);
+                    }
+                }
+            }
+
+            return response;
         }
 
-        public override Task<bool> DeleteAsync<T>(T model, string endPoint)
+        public Task<bool> UnfollowAsync<T>(T model, string endPoint)
         {
             return base.DeleteAsync(model, endPoint);
         }

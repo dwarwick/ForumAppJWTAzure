@@ -25,6 +25,7 @@
 
 @code {
     [CascadingParameter] protected Task<AuthenticationState>? AuthStat { get; set; }
+    [Parameter] public string Target { get; set; } = string.Empty;
 
     ApplicationUserViewModel? applicationUserViewModel;
     private MudTable<ForumViewModel>? _table;
@@ -37,6 +38,9 @@
     protected override async Task OnInitializedAsync()
     {
         IsLoading = true;
+
+        Response<List<ForumViewModel>> response = new();
+
         if (searchForums != null)
         {
             forums = new();
@@ -44,7 +48,44 @@
         }
         else
         {
-            var response = await _forumService.GetAllForums();
+            if (!string.IsNullOrEmpty(Target))
+            {
+                string target = Target.Split('&')[0];
+
+                string strNotification = Target.Split('&')[1];
+
+                int notificationId = int.Parse(strNotification.Split('=')[1]);
+
+                Response<ForumViewModel> forumResponse = await _forumService.GetForum(int.Parse(target.Split('=')[1]));
+
+                if(forumResponse.Success)
+                {
+                    forums = new();
+                    forums.Add(forumResponse?.Data ?? new ForumViewModel());
+
+                    NotificationViewModel notificationViewModel = new();
+                    Response<NotificationViewModel> notificationResponse = await _notificationService.GetSingle<NotificationViewModel>(ApiEndpoints.GetNotification(notificationId));
+                    if(notificationResponse.Success && notificationResponse.Data != null)
+                    {
+                        notificationViewModel = notificationResponse.Data;
+
+                        notificationViewModel.Read = true;
+
+                        bool success = await _notificationService.Put<NotificationViewModel>(notificationViewModel, ApiEndpoints.Notifications);
+
+
+                    }
+
+                    
+
+                }
+            }
+            else
+            {
+                response = await _forumService.GetAllForums();
+            }
+
+            
 
             if (response.Success) forums = response.Data;
         }
@@ -61,6 +102,9 @@
                 applicationUserViewModel = userResponse.Data;
             }
         }
+
+        
+
         IsLoading = false;
     }
     private void PageChanged(int i)

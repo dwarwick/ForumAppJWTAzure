@@ -4,6 +4,7 @@ using ForumAppJWTAzure.Server.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ForumAppJWTAzure.Server.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20230904201733_AddedNotifications")]
+    partial class AddedNotifications
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -147,16 +150,16 @@ namespace ForumAppJWTAzure.Server.Migrations
                         {
                             Id = "8e448afa-f008-446e-a52f-13c449803c2e",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "7af41776-2432-4375-be7f-dd02eb2e8cae",
+                            ConcurrencyStamp = "92c73e60-3422-46c5-adfc-b1cbcfaf25d6",
                             DisplayName = "Admin",
                             Email = "admin@bookstore.com",
                             EmailConfirmed = false,
                             LockoutEnabled = false,
                             NormalizedEmail = "ADMIN@BOOKSTORE.COM",
                             NormalizedUserName = "ADMIN@BOOKSTORE.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEOPxjDNFH1G8DiOeAc20OBsjOeB6D2Jsz8SozFnfJxJuszJrM8wV3zgMA9RU+vBTSQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEBKjKZ+ugTi5n5UnJYPRpeyWkVCoFf4ZTPWp3WHMJQRzRLczqzd1CbC8j87YbMy93g==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "43c8c5ad-06b3-48ac-b7c7-efa690c65966",
+                            SecurityStamp = "1b765d9a-bfc5-4e17-af98-1d74367bc34c",
                             Theme = "Dark",
                             TwoFactorEnabled = false,
                             UserName = "admin@bookstore.com"
@@ -165,16 +168,16 @@ namespace ForumAppJWTAzure.Server.Migrations
                         {
                             Id = "30a24107-d279-4e37-96fd-01af5b38cb27",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "a6dc1a98-f49a-4bde-bde5-5a180813ba07",
+                            ConcurrencyStamp = "fc675e9c-ea1d-4e23-96c7-a0cf4301125e",
                             DisplayName = "User",
                             Email = "user@bookstore.com",
                             EmailConfirmed = false,
                             LockoutEnabled = false,
                             NormalizedEmail = "USER@BOOKSTORE.COM",
                             NormalizedUserName = "USER@BOOKSTORE.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEJGO8EujrySeNgsEmXosIjcQ2LkwAvYcu5NCwZj9gjQXqEdB6J/FEm1GX2wFd1LXzw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEH9n65i6IiMyQKN77HUF+skk9qM+rtO4xsVYth70ULqq6K0BRpzjd3nzOkoM+0P3GQ==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "e93206df-49d5-4886-9043-6c3aeb336626",
+                            SecurityStamp = "e8e73b13-18e9-495f-8ea8-58276f8c049a",
                             Theme = "Dark",
                             TwoFactorEnabled = false,
                             UserName = "user@bookstore.com"
@@ -258,9 +261,6 @@ namespace ForumAppJWTAzure.Server.Migrations
 
                     b.Property<DateTime>("ModifiedDate")
                         .HasColumnType("datetime2");
-
-                    b.Property<bool>("Read")
-                        .HasColumnType("bit");
 
                     b.Property<string>("Target")
                         .IsRequired()

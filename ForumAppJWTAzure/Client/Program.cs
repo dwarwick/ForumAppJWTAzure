@@ -25,6 +25,7 @@ builder.Services.AddScoped<ISearchService, SearchService>();
 builder.Services.AddScoped<IAppLogService, AppLogService>();
 builder.Services.AddScoped<StorageService>();
 builder.Services.AddScoped<IConfigurationService, ConfigurationService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
 
 builder.Services.AddMudServices(config =>
 {

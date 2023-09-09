@@ -33,5 +33,10 @@ namespace ForumAppJWTAzure.Server.Hubs
         {
             await this.Clients.Groups($"postVote{postId}").SendAsync("AddPostVoteViewModel", postVoteViewModel);
         }
+
+        public async Task ForumChanged(string forumChangedViewModel, int forumId)
+        {
+            await this.Clients.Groups($"forumchanged{forumId}").SendAsync("ForumChanged", forumChangedViewModel);
+        }
     }
 }

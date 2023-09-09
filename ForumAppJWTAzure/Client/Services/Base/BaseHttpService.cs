@@ -1,4 +1,5 @@
 ﻿using Blazored.LocalStorage;
+using System.Net;
 using System.Text;
 
 namespace ForumAppJWTAzure.Client.Services.Base
@@ -14,26 +15,7 @@ namespace ForumAppJWTAzure.Client.Services.Base
             this.localStorage = localStorage;
         }
 
-        public static long GetTokenExpirationTime(string token)
-        {
-            var handler = new JwtSecurityTokenHandler();
-            var jwtSecurityToken = handler.ReadJwtToken(token);
-            var tokenExp = jwtSecurityToken.Claims.First(claim => claim.Type.Equals("exp")).Value;
-            var ticks = long.Parse(tokenExp);
-            return ticks;
-        }
-
-        public static bool CheckTokenIsValid(string token)
-        {
-            var tokenTicks = GetTokenExpirationTime(token);
-            var tokenDate = DateTimeOffset.FromUnixTimeSeconds(tokenTicks).UtcDateTime;
-
-            var now = DateTime.Now.ToUniversalTime();
-
-            var valid = tokenDate >= now;
-
-            return valid;
-        }
+       
 
         public virtual async Task<Response<T>> Create<T>(T model, string endPoint)
         {
@@ -109,6 +91,39 @@ namespace ForumAppJWTAzure.Client.Services.Base
             return response;
         }
 
+        public virtual async Task<Response<T>> GetSingle<T>(string endPoint)
+        {
+            Response<T> response;
+            try
+            {
+                var responseMessage = await this.client.GetAsync(endPoint);
+
+                if (responseMessage.IsSuccessStatusCode)
+                {
+                    var jsonString = responseMessage.Content.ReadAsStringAsync().Result;
+                    var myObject = JsonConvert.DeserializeObject<T>(jsonString);
+
+                    response = new Response<T>
+                    {
+                        Data = myObject,
+                        Success = true,
+                    };
+
+                    return response;
+                }
+                else
+                {
+                    return new Response<T> { Message = responseMessage.ReasonPhrase ?? string.Empty, Success = false };
+                }
+            }
+            catch (ApiException exception)
+            {
+                response = this.ConvertApiExceptions<T>(exception);
+            }
+
+            return response;
+        }
+
         public virtual async Task<Response<List<T>>> GetAll<T>(string endPoint)
         {
             Response<List<T>> response;
@@ -140,6 +155,31 @@ namespace ForumAppJWTAzure.Client.Services.Base
             }
 
             return response;
+        }
+
+        public virtual async Task<bool> Put<T>(T model, string endPoint)
+        {            
+            try
+            {
+                var user = System.Text.Json.JsonSerializer.Serialize(model);
+                var requestContent = new StringContent(user, Encoding.UTF8, "application/json");
+
+                if (!await this.GetBearerToken())
+                {
+                    return false;
+                }
+
+                var responseMessage = await this.client.PutAsync(endPoint, requestContent);
+
+                return responseMessage.StatusCode == HttpStatusCode.NoContent;
+                
+            }
+            catch (ApiException)
+            {
+                
+            }
+
+            return false;
         }
 
         public virtual async Task<bool> DeleteAsync<T>(T model, string endPoint)
@@ -214,6 +254,27 @@ namespace ForumAppJWTAzure.Client.Services.Base
             }
 
             return false;
+        }
+
+        public static long GetTokenExpirationTime(string token)
+        {
+            var handler = new JwtSecurityTokenHandler();
+            var jwtSecurityToken = handler.ReadJwtToken(token);
+            var tokenExp = jwtSecurityToken.Claims.First(claim => claim.Type.Equals("exp")).Value;
+            var ticks = long.Parse(tokenExp);
+            return ticks;
+        }
+
+        public static bool CheckTokenIsValid(string token)
+        {
+            var tokenTicks = GetTokenExpirationTime(token);
+            var tokenDate = DateTimeOffset.FromUnixTimeSeconds(tokenTicks).UtcDateTime;
+
+            var now = DateTime.Now.ToUniversalTime();
+
+            var valid = tokenDate >= now;
+
+            return valid;
         }
     }
 }

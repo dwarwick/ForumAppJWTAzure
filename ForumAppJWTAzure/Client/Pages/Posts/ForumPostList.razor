@@ -104,6 +104,16 @@ else
             {
                 applicationUserViewModel = response?.Data ?? new ApplicationUserViewModel();
             }
+
+            if (_signalRService?.HubConnection?.State == HubConnectionState.Connected)
+            {
+                _signalRService.ForumChanged += (s, e) => ForumChanged(s, e);
+
+                if (_signalRService.HubConnection != null && forum != null)
+                {
+                    await _signalRService.HubConnection.SendAsync("AddToGroup", $"forumchanged{forum?.Id}");
+                }
+            }
         }
     }
 
@@ -218,17 +228,19 @@ else
             FollowedForumViewModel model = new()
             {
                 FollowerId = applicationUserViewModel.Id,
-                ForumId = forum?.Id ?? 0
+                ForumId = forum?.Id ?? 0,
+                Title = forum.Title
             };
 
-            Response<FollowedForumViewModel> response = await _forumService.Create<FollowedForumViewModel>(model, ApiEndpoints.FollowForum);
+            Response<FollowedForumViewModel> response = await _forumService.FollowAsync(model, ApiEndpoints.FollowForum);
 
             if(response.Success && forum != null)
             {
                 forum.Followers.Add(applicationUserViewModel);
             }
         }
-        
+
+        StateHasChanged();
     }
 
     private async Task UnFollowOnClick()
@@ -241,7 +253,7 @@ else
                     ForumId = forum?.Id ?? 0
                 };
 
-            bool success = await _forumService.DeleteAsync<FollowedForumViewModel>(model, ApiEndpoints.UnFollowForum(forum?.Id ?? 0, applicationUserViewModel.Id));
+            bool success = await _forumService.UnfollowAsync<FollowedForumViewModel>(model, ApiEndpoints.UnFollowForum(forum?.Id ?? 0, applicationUserViewModel.Id));
 
             if (success && forum != null)
             {
@@ -249,5 +261,18 @@ else
             }
         }
 
+        StateHasChanged();
     }
+
+    private void ForumChanged(object? sender, string FollowedForumViewModel)
+    {
+        if(!string.IsNullOrEmpty(FollowedForumViewModel))
+        {
+            FollowedForumViewModel? model = JsonConvert.DeserializeObject<FollowedForumViewModel>(FollowedForumViewModel);
+
+            
+        }
+    
+    }
+
 }

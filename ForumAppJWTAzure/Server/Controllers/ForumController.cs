@@ -1,16 +1,22 @@
-﻿namespace ForumAppJWTAzure.Server.Controllers
+﻿using Nest;
+
+namespace ForumAppJWTAzure.Server.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class ForumController : ControllerBase
+    public class ForumController : SupplementalController
     {
         private readonly ApplicationDbContext context;
         private readonly IMapper mapper;
+        private readonly INotificationService notificationService;
+        private readonly UserManager<ApplicationUser>? userManager;
 
-        public ForumController(ApplicationDbContext context, IMapper mapper)
+        public ForumController(ApplicationDbContext context, IMapper mapper, INotificationService notificationService, UserManager<ApplicationUser> userManager) : base(userManager)
         {
             this.context = context;
             this.mapper = mapper;
+            this.notificationService = notificationService;
+            this.userManager = userManager;
         }
 
         // GET: api/Forum
@@ -44,21 +50,30 @@
 
         // GET: api/Forum/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<ForumViewModel>> GetForumViewModel(int id)
+        public async Task<ActionResult<ForumViewModel>> GetForumViewModel([FromRoute] int id)
         {
+            Forum? forum = null;
+
             if (this.context.Forums == null)
             {
                 return this.NotFound();
             }
 
-            var forum = await this.context.Forums.FindAsync(id);
-
-            if (forum == null)
+            try
             {
-                return this.NotFound();
+                forum = await this.context.Forums.Where(x => x.Id == id).Include(x => x.CreatedBy)
+                            .Include(y => y.Posts).ThenInclude(x => x.Votes)
+                            .Include(y => y.Posts.OrderByDescending(x => x.CreatedDate)).ThenInclude(x => x.CreatedBy)
+                            .Include(y => y.Tags).ThenInclude(x => x.CreatedBy)
+                            .Include(y => y.Followers)
+                            .FirstOrDefaultAsync();
+            }
+            catch (Exception ex)
+            {
+                return this.Problem($"Unable to get forum list.\n\n{ex}");
             }
 
-            return this.Ok(forum);
+            return this.Ok(this.mapper.Map<ForumViewModel>(forum)); ;
         }
 
         // PUT: api/Forum/5
@@ -145,6 +160,14 @@
                     FollowedForum mapped = mapper.Map<FollowedForum>(model);
                     context.FollowedForums.Add(mapped);
                     await context.SaveChangesAsync();
+
+                    NotificationViewModel notificationViewModel = new NotificationViewModel()
+                    {
+                        Message = $"You are now following Forum '{model.Title}'",
+                        CreatedById = await GetApplicationUserId(),
+                    };
+
+                    await notificationService.AddNotification(notificationViewModel);
                 }
                 else
                 {
@@ -219,6 +242,27 @@
         private bool ForumViewModelExists(int id)
         {
             return (this.context.Forums?.Any(e => e.Id == id)).GetValueOrDefault();
+        }
+
+        private async Task<string> GetApplicationUserId()
+        {
+            if (this.User.Identity != null)
+            {
+                var userIdentity = (ClaimsIdentity)this.User.Identity;
+                var claims = userIdentity.Claims;
+                var roles = claims.Where(c => c.Type == ClaimTypes.Role).Select(x => x.Value).ToList();
+
+                var id = claims.FirstOrDefault(x => x.Type == "uid");
+
+                if (id != null)
+                {
+                    var user = await this.userManager.FindByIdAsync(id.Value);
+
+                    return id.Value;
+                }
+            }
+
+            return "system";
         }
     }
 }

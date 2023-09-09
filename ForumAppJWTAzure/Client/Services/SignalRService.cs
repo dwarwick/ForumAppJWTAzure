@@ -22,6 +22,8 @@ namespace ForumAppJWTAzure.Client.Services
 
         public event EventHandler<string>? AddPostVoteViewModel;
 
+        public event EventHandler<string>? ForumChanged;
+
         public HubConnection? HubConnection { get; set; }
 
         public async Task StartConnection()
@@ -98,11 +100,18 @@ namespace ForumAppJWTAzure.Client.Services
             });
 
             this.HubConnection?.On<string>("AddPostVoteViewModel", (postVoteViewModel) =>
-            {
-                Console.WriteLine("AddPostVoteViewModel");
+            {               
                 if (postVoteViewModel != null && this.AddPostVoteViewModel != null)
                 {
                     this.AddPostVoteViewModel.Invoke(this, postVoteViewModel);
+                }
+            });
+
+            this.HubConnection?.On<string>("ForumChanged", (forumChangedViewModel) =>
+            {
+                if (!string.IsNullOrEmpty(forumChangedViewModel) && this.ForumChanged != null)
+                {
+                    this.ForumChanged.Invoke(this, forumChangedViewModel);
                 }
             });
         }

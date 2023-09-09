@@ -1,3 +1,16 @@
 ﻿@page "/forumlist"
 
-<Forums />
+<Forums Target="@Target"/>
+
+@code{
+    public string? Target { get; set; }
+
+    protected override void OnInitialized()
+    {        
+        string uri = HttpUtility.UrlDecode(_navManager.Uri);
+
+        if (!uri.Contains("?")) return;
+
+        Target = uri?.Split("?")[1];        
+    }
+}

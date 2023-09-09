@@ -6,8 +6,10 @@
 
         Task<Response<List<ForumViewModel>>> GetAllForums();
 
-        Task<Response<T>> Create<T>(T model, string endPoint);
+        Task<Response<ForumViewModel>> GetForum(int forumId);
 
-        Task<bool> DeleteAsync<T>(T model, string endPoint);
+        Task<Response<FollowedForumViewModel>> FollowAsync(FollowedForumViewModel model, string endPoint);
+
+        Task<bool> UnfollowAsync<T>(T model, string endPoint);
     }
 }

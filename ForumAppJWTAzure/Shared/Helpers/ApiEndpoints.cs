@@ -12,12 +12,17 @@
 
         public const string CreateNewForum = "api/forum/createnewforum";
         public const string FollowForum = "api/forum/followforum";
+        public const string GetAllForums = "api/forum";
+        public static string GetForum(int forumId) => $"api/forum/{forumId}";
         public static string UnFollowForum(int forumId,string userId) => $"api/forum/{forumId}/unfollowforum/{userId}";
+        
         public const string CreateNewPost = "api/post/createnewpost";
         public const string EditPost = "api/post/editpost";
-        public const string GetAllForums = "api/forum";
+        
+
         public const string GetAllTags = "api/tags";
         public const string CreateNewTag = "api/tags";
+        
         public const string UploadToStorage = "api/storage";
         public const string UploadImageToStorage = "api/storage/uploadprofilepic";
         public const string UploadPostPic = "api/storage/uploadpostpic2";
@@ -32,5 +37,10 @@
         public const string PredictTags = "api/ml/predicttags";
 
         public const string SearchBySearchTerm = "api/search/searchbysearchterm";
+
+        public static string GetNotifications(string userId) => $"api/notifications/{userId}/getnotifications";
+        public static string GetNotification(int Id) => $"api/notifications/getnotification/{Id}";
+
+        public const string Notifications = "api/notifications";
     }
 }

@@ -25,6 +25,8 @@
 
         public virtual DbSet<FollowedForum> FollowedForums { get; set; }
 
+        public virtual DbSet<Notification> Notifications { get; set; }
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);

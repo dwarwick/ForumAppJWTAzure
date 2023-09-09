@@ -26,6 +26,8 @@
             this.CreateMap<AppLogViewModel, AppLog>().ReverseMap();
 
             this.CreateMap<FollowedForumViewModel, FollowedForum>().ReverseMap();
+
+            this.CreateMap<NotificationViewModel, Notification>().ReverseMap();
         }
     }
 }

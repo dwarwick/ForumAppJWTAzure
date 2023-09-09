@@ -18,5 +18,7 @@ namespace ForumAppJWTAzure.Shared.ViewModels
 
         [ForeignKey("Follower")]
         public string FollowerId { get; set; } = string.Empty;
+
+        public string Title { get; set; } = string.Empty;
     }
 }

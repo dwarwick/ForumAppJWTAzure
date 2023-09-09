@@ -2,6 +2,8 @@
 {
     public class NotificationService : BaseHttpService, INotificationService
     {
+        public event EventHandler<bool> NotificationRead;
+
         private readonly HttpClient client;
         public NotificationService(HttpClient client, ILocalStorageService localStorage) : base(client, localStorage)
         {
@@ -18,9 +20,13 @@
             return base.GetSingle<T>(endPoint);
         }
 
-        public override Task<bool> Put<T>(T value, string endPoint) 
+        public override async Task<bool> Put<T>(T value, string endPoint) 
         { 
-            return base.Put<T>(value, endPoint);
+            bool success = await base.Put<T>(value, endPoint);
+
+            NotificationRead.Invoke(this, success);
+
+            return success;
         }
     }
 }

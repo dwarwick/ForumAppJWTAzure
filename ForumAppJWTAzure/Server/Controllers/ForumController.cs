@@ -165,6 +165,7 @@ namespace ForumAppJWTAzure.Server.Controllers
                     {
                         Message = $"You are now following Forum '{model.Title}'",
                         CreatedById = await GetApplicationUserId(),
+                        Target = $"ForumId={model.ForumId}"
                     };
 
                     await notificationService.AddNotification(notificationViewModel);

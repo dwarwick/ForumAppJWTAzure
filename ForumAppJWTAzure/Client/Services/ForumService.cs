@@ -130,13 +130,7 @@ namespace ForumAppJWTAzure.Client.Services
                 if (this.hubConnection != null)
                 {
                     string serializedFollowedForumViewModel = JsonConvert.SerializeObject(response.Data, Formatting.None, new JsonSerializerSettings() { ReferenceLoopHandling = ReferenceLoopHandling.Ignore });
-
-                    ForumChangedViewModel forumChangedViewModel = new()
-                    {
-                        ViewModel = serializedFollowedForumViewModel,
-                        Message = $"You are now following {model.Title}"
-                    };
-
+                                        
                     if (this.hubConnection != null && this.hubConnection.HubConnection != null)
                     {
                         await this.hubConnection.HubConnection.SendAsync("ForumChanged", serializedFollowedForumViewModel ?? string.Empty, model.ForumId);

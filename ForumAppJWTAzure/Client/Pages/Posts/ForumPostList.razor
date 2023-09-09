@@ -68,6 +68,7 @@ else
 
 @code {
     [Parameter] public ForumViewModel? forum { get; set; }
+    [Parameter] public EventCallback<ForumViewModel> forumChanged { get; set; }
 
     ApplicationUserViewModel applicationUserViewModel = new();
 
@@ -237,6 +238,7 @@ else
             if(response.Success && forum != null)
             {
                 forum.Followers.Add(applicationUserViewModel);
+                await forumChanged.InvokeAsync(forum);
             }
         }
 
@@ -258,6 +260,9 @@ else
             if (success && forum != null)
             {
                 forum.Followers.Remove(applicationUserViewModel);
+                await forumChanged.InvokeAsync(forum);
+
+               
             }
         }
 

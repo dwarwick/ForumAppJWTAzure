@@ -5,8 +5,10 @@
 @code{
     public string? Target { get; set; }
 
-    protected override void OnInitialized()
-    {        
+    protected override void OnParametersSet()
+    {
+        Target = string.Empty;
+        
         string uri = HttpUtility.UrlDecode(_navManager.Uri);
 
         if (!uri.Contains("?")) return;

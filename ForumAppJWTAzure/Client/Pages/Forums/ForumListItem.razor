@@ -31,10 +31,7 @@
                 <div>Most Recent Post: @StringHelper.GetLocalDate(MostRecentPost?.ModifiedDate)</div>
             </MudStack>
 
-        </MudCardContent>
-        @*<div class="card-footer">
-    <ForumTagsComponent ForumId="@forum.Id" />
-    </div>*@
+        </MudCardContent>       
     </MudCard>
 
     @if (selectedForum)
@@ -42,11 +39,8 @@
         <MudDialog IsVisible="@IsOpen" Options="dialogOptions" IsVisibleChanged="IsVisibleChanged" Style="width:95vw;height:100vh;max-height:unset;">
             <TitleContent><MudText Typo="Typo.h6">@forum.Title</MudText></TitleContent>
             <DialogContent>
-                <ForumPostList forum="@forum" />
-            </DialogContent>
-            @*<DialogActions>
-    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Submit" Class="px-10">Close</MudButton>
-    </DialogActions>*@
+                <ForumPostList @bind-forum="@forum" @bind-forum:after="UpdateFollowers" />
+            </DialogContent>            
         </MudDialog>
     }
 }
@@ -59,6 +53,7 @@ else
 @code {
     [Parameter] public ForumViewModel? forum { get; set; }
     [Parameter] public string? RowColor { get; set; }
+    [Parameter] public EventCallback<ForumViewModel> forumChanged { get; set; }
     private DialogOptions dialogOptions = new()
         {
 
@@ -131,5 +126,10 @@ else
         if (model != null) forum?.Posts?.Add(model);
         messageCount = forum?.Posts?.Count ?? 0;
         StateHasChanged();
+    }
+
+    private async Task UpdateFollowers()
+    {
+        await forumChanged.InvokeAsync(forum);
     }
 }

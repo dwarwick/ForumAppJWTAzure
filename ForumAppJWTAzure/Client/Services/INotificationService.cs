@@ -2,6 +2,8 @@
 {
     public interface INotificationService
     {
+        event EventHandler<bool> NotificationRead;
+
         Task<Response<List<T>>> GetAll<T>(string endPoint);
 
         Task<bool> Put<T>(T value, string endPoint);

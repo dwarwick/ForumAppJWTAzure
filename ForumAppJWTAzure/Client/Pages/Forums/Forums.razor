@@ -10,7 +10,7 @@
                 <MudTh></MudTh>
             </HeaderContent>
             <RowTemplate>
-                <MudTd><ForumListItem forum="@context" /></MudTd>
+                <MudTd><ForumListItem @bind-forum="@context" /></MudTd>
             </RowTemplate>
             <PagerContent>
                 @if(_table != null)

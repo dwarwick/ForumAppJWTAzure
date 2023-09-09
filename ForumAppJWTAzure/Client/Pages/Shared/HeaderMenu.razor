@@ -44,7 +44,7 @@
                             </MudBadge>
                         </ActivatorContent>
                         <ChildContent>
-                            <MudTable T="NotificationViewModel" Items="@notifications" OnRowClick="@NavigateToNotification" Context="NotificationContext" Height="25vh" Dense="true" FixedHeader="true" Outlined="true" Hover="true">
+                            <MudTable Class="m-3" T="NotificationViewModel" Items="@notifications" OnRowClick="@NavigateToNotification" Context="NotificationContext" Height="25vh" Dense="true" FixedHeader="true" Outlined="true" Hover="true">
                                 <HeaderContent><MudTh>Notifications</MudTh></HeaderContent>
 
                                 <RowTemplate><MudTd DataLabel="Notifications">@NotificationContext.Message</MudTd></RowTemplate>
@@ -93,6 +93,7 @@
         _authService.UpdatedUser += (s, e) => UpdatedUser(s, e);
         _authService.UserLoggedOut += (s, e) => UserLoggedOut(s, e);
         _signalRService.ForumChanged += (s, e) => ForumChanged(s, e);
+        _notificationService.NotificationRead += async (s, e) => await UpdateNotifications();
 
         if (await _authService.IsIauthenticated() && applicationUserViewModel == null)
         {
@@ -169,6 +170,7 @@
         _authService.UpdatedUser -= UpdatedUser;
         _authService.UserLoggedOut -= UserLoggedOut;
         _signalRService.ForumChanged -= ForumChanged;
+        _notificationService.NotificationRead -= NotificationRead;
 
         StateHasChanged();
     }
@@ -194,6 +196,11 @@
         }
 
         StateHasChanged();
+    }
+
+    private async void NotificationRead(object? sender, bool success)
+    {
+        await UpdateNotifications();
     }
 
     private void NavigateToNotification(TableRowClickEventArgs<NotificationViewModel> notification)
